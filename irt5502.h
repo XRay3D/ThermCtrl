@@ -20,6 +20,76 @@ public:
     //    bool getCurrent(int addr = 0);
     //    bool getVoltage(const QVector<int> addr);
 
+    bool CreatePwOn(double val)
+    {
+        /*
+constructor ThHCC_UN.CreatePwOn(var rcd_HCC: TRcd_HCC; fix_T: single);
+  begin
+    inherited Create(true);
+    FreeOnTerminate := true;
+    OEvt := TEvent.Create(false);
+
+    self.PRcd_HCC := @rcd_HCC;
+    self.fix_T := fix_T;
+    self.HCC_UN := THCC_UN.enHCC_UN_PwrOn;
+
+    valSingle.val := fix_T;
+    valSingle.ID.pVal := @valSingle.val;
+    valSingle.ID.ID := $DA66;
+    valSingle.ID.TP := eSingle;
+    valSingle.ID.sign := SignChng;
+
+    valByte.val := $01;
+    valByte.ID.pVal := @valByte.val;
+    valByte.ID.ID := $DA65;
+    valByte.ID.TP := eByte;
+    valByte.ID.sign := SignChng;
+  end;
+*/
+    }
+
+    bool CreatePwOff()
+    {
+        /*
+constructor ThHCC_UN.CreatePwOff(var rcd_HCC: TRcd_HCC);
+  begin
+    inherited Create(true);
+    OEvt := TEvent.Create(false);
+
+    FreeOnTerminate := true;
+    self.PRcd_HCC := @rcd_HCC;
+    self.HCC_UN := THCC_UN.enHCC_UN_PwrOff;
+
+    valByte.val := $00;
+    valByte.ID.pVal := @valByte.val;
+    valByte.ID.ID := $DA65;
+    valByte.ID.TP := eByte;
+    valByte.ID.sign := SignChng;
+  end;
+*/
+    }
+
+    bool CreateGetT(double &val)
+    {
+        /*
+constructor ThHCC_UN.CreateGetT(var rcd_HCC: TRcd_HCC);
+  begin
+    inherited Create(true);
+    OnTerminate := nil;
+    FreeOnTerminate := false;
+    OEvt := TEvent.Create(false);
+    self.PRcd_HCC := @rcd_HCC;
+    self.HCC_UN := THCC_UN.enHCC_UN_GetT;
+
+    valAll.ID.pVal := @valAll.val;
+    valAll.ID.ID := $00FF;
+    valAll.ID.TP := eIRT5502_AllCH;
+    valAll.ID.sign := SignChng;
+
+  end;
+*/
+    }
+
 private:
     // uint getUintData(QByteArray data);
     // bool getSuccess(QByteArray data);

@@ -14,6 +14,7 @@ Irt5502::Irt5502(QObject* parent)
     connect(this, &Irt5502::open, m_port, &IrtPort::Open);
     connect(this, &Irt5502::close, m_port, &IrtPort::Close);
     connect(this, &Irt5502::write, m_port, &IrtPort::Write);
+    connect(m_port, &IrtPort::message, this, &Irt5502::message);
     m_portThread.start(QThread::InheritPriority);
 }
 
@@ -31,12 +32,14 @@ bool Irt5502::ping(const QString& portName, int baud, int addr)
 
         if (!portName.isEmpty())
             m_port->setPortName(portName);
+        if (baud != 0)
+            m_port->setBaudRate(baud);
 
         emit open(QIODevice::ReadWrite);
         if (!m_semaphore.tryAcquire(1, 1000))
             break;
 
-        if (!(getDev(1) == MAN && getDev(2) == MAN && getDev(3) == MAN && getDev(4) == MAN)) {
+        if (getDev(addr) != IRT5502) {
             emit close();
             m_connected = false;
         }
@@ -47,143 +50,104 @@ bool Irt5502::ping(const QString& portName, int baud, int addr)
 int Irt5502::getDev(int addr)
 {
     dev = 0;
+
     if (m_connected) {
         emit write(createParcel(addr, 0));
-        if (m_semaphore.tryAcquire(1, 1000))
+        if (m_semaphore.tryAcquire(1, 1000)) {
+            address = addr;
             dev = m_data[1].toInt();
+        }
     }
     return dev;
 }
 
-bool Irt5502::setCurrent(double value, int addr)
-{
-    QMutexLocker locker(&m_mutex);
-    m_current[addr] = value;
-    if (m_connected) {
-        emit write(createParcel(addr, SetPar, Hex(m_load[addr]), SkipSemicolon {}, Hex(m_current[addr])));
-        if (m_semaphore.tryAcquire(1, 1000))
-            return true;
-    }
-    return {};
-}
-
-bool Irt5502::setEnabledCurrent(bool enable, int addr)
-{
-    QMutexLocker locker(&m_mutex);
-    m_load[addr] = enable;
-    if (m_connected) {
-        emit write(createParcel(addr, SetPar, Hex(m_load[addr]), SkipSemicolon {}, Hex(m_current[addr])));
-        if (m_semaphore.tryAcquire(1, 1000))
-            return true;
-    }
-    return {};
-}
-
-bool Irt5502::getCurrent(int addr)
-{
-    QMutexLocker locker(&m_mutex);
-    QVector<float> values(4, 0.0);
-    bool fl = false;
-    int begin, end;
-    if (m_connected) {
-        if (addr)
-            begin = end = addr;
-        else {
-            begin = 1;
-            end = 5;
-        }
-        do {
-            emit write(createParcel(begin, GetData, DataType::Current));
-            if (m_semaphore.tryAcquire(1, 1000)) {
-                values[begin - 1] = m_data[1].toFloat();
-                fl = true;
-
-            } else
-                break;
-        } while (++begin < end);
-    }
-    if (addr == 0)
-        fl = begin == 5;
-    if (fl)
-        emit Current(values);
-    return fl;
-}
-
-bool Irt5502::getVoltage(const QVector<int> addr)
-{
-    QMutexLocker locker(&m_mutex);
-    if (!m_connected)
-        return false;
-    do {
-        //        if (addr) {
-        //            emit write(createParcel(addr, GetData, DataType::Voltage));
-        //            if (!m_semaphore.tryAcquire(1, 1000))
-        //                return false;
-        //            constexpr double k = 0.05;
-        //            if (float val = m_data[1].toFloat(); abs(val - m_values[addr - 1]) > 1.0)
-        //                m_values[addr - 1] = val;
-        //            else
-        //                m_values[addr - 1] = m_values[addr - 1] * (1.0 - k) + val * k;
-        //        } else {
-        t.start();
-        m_values = { 0, 0, 0, 0 };
-        for (int currentAddr : addr) {
-            emit write(createParcel(currentAddr, GetData, DataType::Voltage));
-            if (!m_semaphore.tryAcquire(1, 1000))
-                return false;
-            constexpr double k = 0.05;
-            if (float val = m_data[1].toFloat(); abs(val - m_values[currentAddr - 1]) > 1.0)
-                m_values[currentAddr - 1] = val;
-            else
-                m_values[currentAddr - 1] = m_values[currentAddr - 1] * (1.0 - k) + val * k;
-        }
-        qDebug() << __FUNCTION__ << t.elapsed() << "ms";
-        //        }
-    } while (0);
-    emit Voltage(m_values);
-    return true;
-}
-
-//bool KDS::setOut(int addr, int value)
+//bool Irt5502::setCurrent(double value, int addr)
 //{
 //    QMutexLocker locker(&m_mutex);
+//    m_current[addr] = value;
 //    if (m_connected) {
-//        QByteArray data = QString(":%1;4;%2;").arg(addr).arg(value).toLocal8Bit();
-//        data.append(CalcCrc(data)).append('\r');
-//        Write(data);
-//        if (m_semaphore.tryAcquire(1, 1000)) {
-//            return getSuccess(m_data);
-//        }
-//    }
-//    return false;
-//}
-
-//uint MAN::getUintData(QByteArray data)
-//{
-//    if (checkParcel(data)) {
-//        return getValues()[1].toInt();
-//    }
-//    return 0;
-//}
-
-//bool MAN::getSuccess(QByteArray data)
-//{
-//    if (data.isEmpty())
-//        return false;
-//    int i = 0;
-//    while (data[0] != '!' && data.size())
-//        data = data.remove(0, 1);
-//    while (data[data.size() - 1] != '\r' && data.size())
-//        data = data.remove(data.size() - 1, 1);
-//    data = data.remove(data.size() - 1, 1);
-//    QList<QByteArray> list = data.split(';');
-//    data.clear();
-//    while (i < list.count() - 1)
-//        data.append(list[i++]).append(';');
-//    if (CalcCrc(data).toInt() == list.last().toInt() && list.count() > 2)
-//        if (list.at(1) == "$0")
+//        emit write(createParcel(addr, SetPar, Hex(m_load[addr]), SkipSemicolon {}, Hex(m_current[addr])));
+//        if (m_semaphore.tryAcquire(1, 1000))
 //            return true;
-//    return false;
+//    }
+//    return {};
+//}
+
+//bool Irt5502::setEnabledCurrent(bool enable, int addr)
+//{
+//    QMutexLocker locker(&m_mutex);
+//    m_load[addr] = enable;
+//    if (m_connected) {
+//        emit write(createParcel(addr, SetPar, Hex(m_load[addr]), SkipSemicolon {}, Hex(m_current[addr])));
+//        if (m_semaphore.tryAcquire(1, 1000))
+//            return true;
+//    }
+//    return {};
+//}
+
+//bool Irt5502::getCurrent(int addr)
+//{
+//    QMutexLocker locker(&m_mutex);
+//    QVector<float> values(4, 0.0);
+//    bool fl = false;
+//    int begin, end;
+//    if (m_connected) {
+//        if (addr)
+//            begin = end = addr;
+//        else {
+//            begin = 1;
+//            end = 5;
+//        }
+//        do {
+//            emit write(createParcel(begin, GetData, DataType::Current));
+//            if (m_semaphore.tryAcquire(1, 1000)) {
+//                values[begin - 1] = m_data[1].toFloat();
+//                fl = true;
+
+//            } else
+//                break;
+//        } while (++begin < end);
+//    }
+//    if (addr == 0)
+//        fl = begin == 5;
+//    if (fl)
+//        emit Current(values);
+//    return fl;
+//}
+
+//bool Irt5502::getVoltage(const QVector<int> addr)
+//{
+//    QMutexLocker locker(&m_mutex);
+//    if (!m_connected)
+//        return false;
+//    do {
+//        //        if (addr) {
+//        //            emit write(createParcel(addr, GetData, DataType::Voltage));
+//        //            if (!m_semaphore.tryAcquire(1, 1000))
+//        //                return false;
+//        //            constexpr double k = 0.05;
+//        //            if (float val = m_data[1].toFloat(); abs(val - m_values[addr - 1]) > 1.0)
+//        //                m_values[addr - 1] = val;
+//        //            else
+//        //                m_values[addr - 1] = m_values[addr - 1] * (1.0 - k) + val * k;
+//        //        } else {
+//        t.start();
+//        m_values = { 0, 0, 0, 0 };
+//        for (int currentAddr : addr) {
+//            emit write(createParcel(currentAddr, GetData, DataType::Voltage));
+//            if (!m_semaphore.tryAcquire(1, 1000))
+//                return false;
+//            constexpr double k = 0.05;
+//            if (float val = m_data[1].toFloat(); abs(val - m_values[currentAddr - 1]) > 1.0)
+//                m_values[currentAddr - 1] = val;
+//            else
+//                m_values[currentAddr - 1] = m_values[currentAddr - 1] * (1.0 - k) + val * k;
+//        }
+//        qDebug() << __FUNCTION__ << t.elapsed() << "ms";
+//        //        }
+//    } while (0);
+//    emit Voltage(m_values);
+//    return true;
 //}
 
 ///////////////////////////////////////////
@@ -204,6 +168,8 @@ void IrtPort::Open(int mode)
 {
     if (open(static_cast<OpenMode>(mode)))
         m_kds->m_semaphore.release();
+    else
+        emit message(errorString());
 }
 
 void IrtPort::Close()
@@ -229,3 +195,404 @@ void IrtPort::procRead()
         m_kds->m_semaphore.release();
     }
 }
+
+/*
+    EnErr result = OK;
+    QByteArray str;
+    double SnglVal = 0.0;
+    int LIntVal = 0;
+    uint32_t DWVal = 0;
+    int i = 0;
+    str.resize(255);
+    BC.CRet = EZERO;
+    result = OK;
+    if (OpenComPort()) {
+        switch (cmd) {
+        case 0: {
+            result = Transaction(";0;", 500);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    try {
+                        if (BC.tdev != strToInt(((QByteArray)str))) {
+                            result = EUNDEFTYPE;
+                            AddList("UAI", QByteArray("неподдерживаемый тип прибора ->") + ((QByteArray)str));
+                        } else {
+                            str = buffRx.SubString(IndStart + 1, semi[0] - IndStart - 1);
+                            Val.arr[0] = strToInt(((QByteArray)str));
+                            Val.n = 1;
+                        }
+                    } catch (...) {
+                        AddList("UAI", QByteArray("ошибка преобразования Str->Int") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    }
+                }
+            }
+        } break;
+        case 1: {
+            buffTx = QByteArray(";1;") + buffTx + ";";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    try {
+                        SnglVal = strToFloat(((QByteArray)str));
+                        (PSingle(&Val.arr[0])) = SnglVal;
+                        Val.n = 4;
+                    } catch (...) {
+                        AddList("UAI", QByteArray("ошибка преобразования Str->Float") + "\"" + ((QByteArray)str) + "\"");
+                        result = EEXCEPT;
+                    }
+                }
+            }
+        } break;
+        case 2: {
+            buffTx = QByteArray(";2;") + buffTx + ";"; //установить адресс на доступ в еепроме
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                BC.CRet = ECodReturn(&str[1]);
+                if (BC.CRet != EZERO) {
+                    AddList("UAI", QByteArray(" Код ошибки=") + ((QByteArray)str));
+                    result = EFAIL;
+                } else
+                    result = OK;
+            }
+        } break;
+        case 8: {
+            buffTx = QByteArray(";8;") + buffTx + ";"; //считать из еепрома buffTx байт.
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                if (str[1] == '$') {
+                    AddList("UAI", QByteArray(" Код ошибки=") + str[2]);
+                    result = EFAIL;
+                } else {
+                    Val.n = (semi[1] - semi[0] - 1);
+                    for (int stop = Val.n - 1, i = 0; i <= stop; i++)
+                        Val.arr[i] = ((uchar)(str[i + 1]));
+                    result = OK;
+                }
+            }
+        } break;
+        case 199: {
+            buffTx = ";199;A5;"; //ресет!
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+//                    try
+//SnglVal:=strToFloat(str);
+//(PSingle(@Val.arr))^:=SnglVal;
+//Val.n:=4;
+//except
+//AddList('UAI','ошибка преобразования Str->Float'+'"'+str+'"');
+//result:=EEXCEPT;
+//end;
+                }
+            }
+        } break;
+        case 32: {
+            result = Transaction(";32;", 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    try {
+                        if (EnNameBCUAI(BC.TCom, strToInt(((QByteArray)str))))
+                            result = OK;
+                        else {
+                            AddList("UAI", "неподдерживаемый протокол");
+                            result = EPROTOCOL;
+                        }
+                    } catch (...) {
+                        AddList("UAI", QByteArray("ошибка преобразования Str->Int") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    }
+                }
+            }
+        } break;
+        case 33: {
+            buffTx = QByteArray(";33;") + buffTx + ";";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        AddList("UAI", QByteArray("ошибка преобразования строки:") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("Невозможно установ. новый адрес. Код ошибки=") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 34: {
+            buffTx = QByteArray(";34;") + buffTx + ";";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        AddList("UAI", QByteArray("ошибка преобразования строки:") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("Невозможно установ. новую скороть. Код ошибки=") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 35: {
+            buffTx = ";35;";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    try {
+                        if (EnNameBCStat(BC.Stat, strToInt(((QByteArray)str))) != true) {
+                            AddList("UAI", QByteArray("невозможное значение:") + ((QByteArray)str));
+                            result = EIMPOSSIBLE;
+                        }
+                    } catch (...) {
+                        AddList("UAI", QByteArray("ошибка преобразования строки:") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    }
+                }
+            }
+        } break;
+        case 36: {
+            buffTx = QByteArray(";36;") + IntToAnsi(Val.n) + ";";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        if (StrToHex_M(str, Val.arr) == false) {
+                            AddList("UAI", "ошибка преобразования строки");
+                            result = EEXCEPT;
+                        } else
+                            Val.n = ((uchar)(str.Length() / 2));
+                    } else {
+                        AddList("UAI", QByteArray("Невозможно считать буфер возврата") + ((QByteArray)str));
+                        result = EFAIL;
+                    }
+                }
+            }
+        } break;
+        case 37: {
+            buffTx = QByteArray(";37;") + buffTx + ";";
+            result = Transaction(buffTx, 1500);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        if (StrToHex_M(str, Val.arr) == false) {
+                            AddList("UAI", "ошибка преобразования строки");
+                            result = EEXCEPT;
+                        } else {
+                            Val.n = ((uchar)(str.Length() / 2));
+                        }
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("код возврата") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 38: {
+            buffTx = QByteArray(";38;") + buffTx + ";";
+            result = Transaction(buffTx, 5000);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        AddList("UAI", QByteArray("невозможное значение:") + ((QByteArray)str));
+                        result = EIMPOSSIBLE;
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("код возврата") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 40: {
+            buffTx = QByteArray(";40;") + buffTx + ";";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        AddList("UAI", QByteArray("ошибка преобразования строки:") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("Невозможно открыть файл. Код ошибки=") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 41: {
+            buffTx = QByteArray(";41;") + buffTx + ";";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        AddList("UAI", QByteArray("ошибка преобразования строки:") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("Невозможно установит адрес в файле. Код ошибки=") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 42: {
+            buffTx = QByteArray(";42;") + buffTx + ";";
+            result = Transaction(buffTx, 3000);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        if (StrToHex_M(str, Val.arr) == false) {
+                            AddList("UAI", "ошибка преобразования строки:");
+                            result = EEXCEPT;
+                        } else
+                            Val.n = ((uchar)(str.Length() / 2));
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("Невозможно считать данные из файла. Код ошибки=") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 43: {
+            buffTx = QByteArray(";43;") + buffTx + ";";
+            result = Transaction(buffTx, 6800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        AddList("UAI", QByteArray("ошибка преобразования строки:") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("Невозможно записать данные в файл. Код ошибки=") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 44: {
+            buffTx = QByteArray(";44;") + buffTx + ";";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        AddList("UAI", QByteArray("ошибка преобразования строки:") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("Невозможно закрыть файл. Код ошибки=") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 45: {
+            buffTx = QByteArray(";45;") + buffTx + ";";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        if (TryStrToInt(((QByteArray)str), LIntVal) == false) {
+                            AddList("UAI", QByteArray("ошибка преобразования строки:") + "\"" + ((QByteArray)str) + "\"");
+                            result = EEXCEPT;
+                        } else {
+                            PLongint(&Val.arr[0]) = LIntVal;
+                            Val.n = 4;
+                            BC.CRet = EZERO;
+                        }
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("Неудалось определить позицию в файле. Код ошибки=") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 46: {
+            buffTx = QByteArray(";46;") + buffTx + ";";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        AddList("UAI", QByteArray("ошибка преобразования строки:") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("Невозможно установить атрибут файла. Код ошибки=") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        case 47: {
+            buffTx = QByteArray(";47;") + buffTx + ";";
+            result = Transaction(buffTx, 800);
+            if (result == OK) {
+                if (nSemi == 1) {
+                    str = buffRx.SubString(semi[0] + 1, semi[1] - semi[0] - 1);
+                    BC.CRet = ECodReturn(&str[1]);
+                    if (BC.CRet == EFALSE) {
+                        AddList("UAI", QByteArray("ошибка преобразования строки:") + ((QByteArray)str));
+                        result = EEXCEPT;
+                    } else {
+                        if (BC.CRet != EZERO) {
+                            AddList("UAI", QByteArray("Невозможно стереть файл. Код ошибки=") + ((QByteArray)str));
+                            result = EFAIL;
+                        }
+                    }
+                }
+            }
+        } break;
+        }
+    } else
+        result = EBUSY;
+    return result;
+
+*/

@@ -7,6 +7,7 @@ class MainWindow;
 }
 
 class PointModel;
+class Irt5502;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -27,6 +28,7 @@ private:
     QVector<QPointF> chartsData;
 
     PointModel* pointModel;
+    Irt5502* irt;
 
 protected:
     // QWidget interface
@@ -39,4 +41,5 @@ private slots:
     void on_pushButtonManStartStop_clicked(bool checked);
 
     void on_pushButtonReadTemp_clicked();
+    void on_doubleSpinBoxSetPoint_valueChanged(double arg1);
 };

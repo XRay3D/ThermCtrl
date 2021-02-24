@@ -4,6 +4,7 @@
 #include "irt5502.h"
 #include "pointmodel.h"
 
+#include <QDebug>
 #include <QScrollBar>
 #include <QSettings>
 #include <algorithm>
@@ -13,8 +14,9 @@ using PortInfo = QSerialPortInfo;
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-    , pointModel(new PointModel(this))
+    , ui { new Ui::MainWindow }
+    , pointModel { new PointModel(this) }
+    , irt { new Irt5502(this) }
 {
     ui->setupUi(this);
     ui->statusbar->setFont(font());
@@ -103,6 +105,12 @@ void MainWindow::showEvent(QShowEvent* event)
 
 void MainWindow::on_pushButtonFind_clicked()
 {
+    qDebug() << __FUNCTION__;
+    ui->statusbar->showMessage("Поиск термокамеры...", 1000);
+
+    ui->statusbar->showMessage("Термокамера найдена", 1000);
+
+    ui->statusbar->showMessage("Нет связи", 1000);
 }
 
 void MainWindow::on_pushButtonAutoStartStop_clicked(bool checked)
@@ -115,13 +123,20 @@ void MainWindow::on_pushButtonAutoStartStop_clicked(bool checked)
 
 void MainWindow::on_pushButtonManStartStop_clicked(bool checked)
 {
-    ui->groupBoxAuto->setEnabled(!checked);
-    if (checked) {
+    if (irt->isConnected()) {
+        ui->statusbar->showMessage(checked ? "камера включена" : "камера остановлена");
+        ui->pushButtonManStartStop->setText(checked ? "Стоп" : "Старт на уставку");
+        ui->groupBoxAuto->setEnabled(!checked);
     } else {
+        ui->pushButtonManStartStop->setChecked(false);
+        ui->statusbar->showMessage("Нет связи с термокамерой");
     }
 }
 
 void MainWindow::on_pushButtonReadTemp_clicked()
 {
-    ui->statusbar->showMessage("qwe");
+}
+
+void MainWindow::on_doubleSpinBoxSetPoint_valueChanged(double arg1)
+{
 }

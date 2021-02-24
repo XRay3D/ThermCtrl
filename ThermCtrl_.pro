@@ -2,6 +2,8 @@ QT       += core gui serialport charts
 
 DESTDIR = $$_PRO_FILE_PWD_/bin
 
+include(../elemer_ascii/elemer_ascii.pri)
+include(../CommonInterfaces/CommonInterfaces.pri)
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -15,11 +17,19 @@ DEFINES += __cpp_lib_coroutine
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    auto.cpp \
+    chartview.cpp \
+    irt5502.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    pointmodel.cpp
 
 HEADERS += \
-    mainwindow.h
+    auto.h \
+    chartview.h \
+    irt5502.h \
+    mainwindow.h \
+    pointmodel.h
 
 FORMS += \
     mainwindow.ui

@@ -1,26 +1,42 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
-#include <QtCore/qglobal.h>
-#if QT_VERSION >= 0x050000
-#include <QtWidgets/QMainWindow>
-#else
-#include <QtGui/QMainWindow>
-#endif
+#include <QMainWindow>
 
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
+namespace Ui {
+class MainWindow;
+}
 
-class MainWindow : public QMainWindow
-{
+class PointModel;
+
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
 private:
-    Ui::MainWindow *ui;
+    Ui::MainWindow* ui;
+
+    void saveSettings();
+    void loadSettings();
+
+    void updateTableViewPointsHeight();
+
+    // QtCharts
+    QVector<QPointF> chartsData;
+
+    PointModel* pointModel;
+
+protected:
+    // QWidget interface
+    void showEvent(QShowEvent* event) override;
+
+private slots:
+    void on_pushButtonFind_clicked();
+
+    void on_pushButtonAutoStartStop_clicked(bool checked);
+    void on_pushButtonManStartStop_clicked(bool checked);
+
+    void on_pushButtonReadTemp_clicked();
 };
-#endif // MAINWINDOW_H

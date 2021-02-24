@@ -78,6 +78,12 @@
            </item>
            <item>
             <widget class="QSpinBox" name="spinBoxAddress">
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="alignment">
               <set>Qt::AlignCenter</set>
              </property>
@@ -101,6 +107,19 @@
               <string>Поиск</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -137,6 +156,9 @@
             <widget class="QDoubleSpinBox" name="doubleSpinBoxReadTemp">
              <property name="alignment">
               <set>Qt::AlignCenter</set>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
              </property>
              <property name="buttonSymbols">
               <enum>QAbstractSpinBox::NoButtons</enum>
@@ -264,7 +286,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QChartView" name="chartView"/>
+      <widget class="ChartView" name="chartView"/>
      </widget>
     </item>
    </layout>
@@ -283,9 +305,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QChartView</class>
+   <class>ChartView</class>
    <extends>QGraphicsView</extends>
-   <header location="global">qchartview.h</header>
+   <header>chartview.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

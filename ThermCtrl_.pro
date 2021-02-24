@@ -38,3 +38,30 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+#    ThermCtrl/Common.dcu \
+    ThermCtrl/Common.pas \
+    ThermCtrl/LowLvlCom.PAS \
+#    ThermCtrl/LowLvlCom.dcu \
+#    ThermCtrl/MdlLvlCom.dcu \
+    ThermCtrl/MdlLvlCom.pas \
+#    ThermCtrl/ThHCC.dcu \
+    ThermCtrl/ThHCC.pas \
+#    ThermCtrl/ThermCtrl.7z \
+#    ThermCtrl/ThermCtrl.dcu \
+#    ThermCtrl/ThermCtrl.dfm \
+    ThermCtrl/ThermCtrl.pas \
+#    ThermCtrl/ThermoCtrl.dpr \
+#    ThermCtrl/ThermoCtrl.dproj \
+#    ThermCtrl/ThermoCtrl.dproj.local \
+#    ThermCtrl/ThermoCtrl.dsk \
+#    ThermCtrl/ThermoCtrl.exe \
+#    ThermCtrl/ThermoCtrl.identcache \
+#    ThermCtrl/ThermoCtrl.res \
+#    ThermCtrl/ThermoCtrl.zip \
+#    ThermCtrl/ThermoCtrl.~dsk \
+#    ThermCtrl/Time.dcu \
+#    ThermCtrl/Time.dfm \
+    ThermCtrl/Time.pas \
+#    ThermCtrl/config.txt

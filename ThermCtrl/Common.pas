@@ -1,4 +1,4 @@
-﻿unit Common;
+unit Common;
 
 interface
 

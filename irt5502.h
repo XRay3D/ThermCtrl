@@ -6,6 +6,21 @@
 
 class IrtPort;
 
+struct rIRT5502_AllCHval {
+    uint8_t bitRele;
+    uint8_t bitUst1;
+    uint8_t bitUst2;
+    uint8_t bitUst3;
+    uint8_t bitPID;
+    uint8_t ch1err;
+    float ch1val;
+    uint8_t ch2err;
+    float ch2val;
+    uint8_t ch3err;
+    float ch3val;
+    uint8_t bitInput;
+};
+
 class Irt5502 : public QObject, public CommonInterfaces, public ElemerASCII {
     Q_OBJECT
     friend class IrtPort;
@@ -23,7 +38,7 @@ public:
     bool CreatePwOn(double val)
     {
         /*
-constructor ThHCC_UN.CreatePwOn(var rcd_HCC: TRcd_HCC; fix_T: single);
+constructor ThHCC_UN.CreatePwOn(var rcd_HCC: TRcd_HCC; fix_T: float);
   begin
     inherited Create(true);
     FreeOnTerminate := true;
@@ -69,7 +84,7 @@ constructor ThHCC_UN.CreatePwOff(var rcd_HCC: TRcd_HCC);
 */
     }
 
-    bool CreateGetT(double &val)
+    bool CreateGetT(double& val)
     {
         /*
 constructor ThHCC_UN.CreateGetT(var rcd_HCC: TRcd_HCC);

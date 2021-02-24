@@ -12,8 +12,8 @@ type
 
   THCC_UN = (enHCC_UN_Mthr, // enHCC_UN_Wr, // enHCC_UN_Rd, enHCC_UN_Find, enHCC_UN_GetT, enHCC_UN_PwrOn, enHCC_UN_PwrOff);
 
-  HCC_D_REG = (en_DREG_TEMP_PV = 0001, // текущая температура
-    en_DREG_TEMP_SP = 0002, // установленная температура
+  HCC_D_REG = (en_DREG_TEMP_PV = 0001, // С‚РµРєСѓС‰Р°СЏ С‚РµРјРїРµСЂР°С‚СѓСЂР°
+    en_DREG_TEMP_SP = 0002, // СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅР°СЏ С‚РµРјРїРµСЂР°С‚СѓСЂР°
     en_DREG_STATUS_MODE = 0101, en_DREG_OP_MODE = 0104, en_DREG_PWR_MODE = 0105);
   HCC_STATUS_MODE = (en_RUN = 1, en_HOLD = 2, en_STEP = 3, en_STOP = 4);
   HCC_OP_MODE = (PROG = 0, FIX = 1);
@@ -24,7 +24,7 @@ type
   TOnMeasuring = procedure(val: single) of object;
   TOnAddListTrase = procedure(s: string) of object;
 
-  rInterfse_IRT5502 = record // термокамера с контроллером IRT5502
+  rInterfse_IRT5502 = record // С‚РµСЂРјРѕРєР°РјРµСЂР° СЃ РєРѕРЅС‚СЂРѕР»Р»РµСЂРѕРј IRT5502
     add: integer;
     spd: string;
   end;
@@ -45,7 +45,7 @@ type
 
   TPRcd_HCC = ^TRcd_HCC;
 
-  THCC_T6800_RW = class(TObject) // применяется при поиске приборов
+  THCC_T6800_RW = class(TObject) // РїСЂРёРјРµРЅСЏРµС‚СЃСЏ РїСЂРё РїРѕРёСЃРєРµ РїСЂРёР±РѕСЂРѕРІ
     protected
       ID: rID;
 
@@ -85,7 +85,7 @@ type
       destructor Destroy; override;
   end;
 
-  ThHCC_UN = class(TThread) // применяется при измерениях (поверка градуировка и т.д.)
+  ThHCC_UN = class(TThread) // РїСЂРёРјРµРЅСЏРµС‚СЃСЏ РїСЂРё РёР·РјРµСЂРµРЅРёСЏС… (РїРѕРІРµСЂРєР° РіСЂР°РґСѓРёСЂРѕРІРєР° Рё С‚.Рґ.)
     protected
       fix_T: single;
       test_Tag: single;
@@ -373,7 +373,7 @@ procedure ThHCC_UN.Execute;
                       end
                     else
                       begin
-                        // HCC_T6800_RW.PrtCriticalMessage('ThHCC_UN'+rcd_HCC.com+' порт занят',self.rcd_HCC.criticalHandle);
+                        // HCC_T6800_RW.PrtCriticalMessage('ThHCC_UN'+rcd_HCC.com+' РїРѕСЂС‚ Р·Р°РЅСЏС‚',self.rcd_HCC.criticalHandle);
                       end;
                     // end;
                     // HCC_IRT5502_RW.MdLvl.ClosePort;
@@ -383,7 +383,7 @@ procedure ThHCC_UN.Execute;
               end;
             enHCC_UN_Find:
               begin
-                // Мay be need close port ONLE if not connection ?
+                // Рњay be need close port ONLE if not connection ?
                 connect := HCC_IRT5502_RW.Find();
               end;
             enHCC_UN_GetT:
@@ -435,7 +435,7 @@ procedure ThHCC_UN.Execute;
                       end
                     else
                       begin
-                        // HCC_T6800_RW.PrtCriticalMessage('ThHCC_UN'+rcd_HCC.com+' порт занят',self.rcd_HCC.criticalHandle);
+                        // HCC_T6800_RW.PrtCriticalMessage('ThHCC_UN'+rcd_HCC.com+' РїРѕСЂС‚ Р·Р°РЅСЏС‚',self.rcd_HCC.criticalHandle);
                       end;
                     // end;
                     sleep(1000);
@@ -463,7 +463,7 @@ procedure ThHCC_UN.Execute;
                     connect := true;
                   end
               end;
-            enHCC_UN_PwrOn: // включение термокамеры
+            enHCC_UN_PwrOn: // РІРєР»СЋС‡РµРЅРёРµ С‚РµСЂРјРѕРєР°РјРµСЂС‹
               begin
                 HCC_T6800_RW.AddRegs(HCC_T6800_RW.Regs, ord(en_DREG_STATUS_MODE), ord(en_STOP));
                 HCC_T6800_RW.WRD(HCC_T6800_RW.Regs);
@@ -493,7 +493,7 @@ procedure ThHCC_UN.Execute;
     OEvt.ResetEvent;
     randomize();
     test_Tag := 100;
-    // ждём когда освободится компорт
+    // Р¶РґС‘Рј РєРѕРіРґР° РѕСЃРІРѕР±РѕРґРёС‚СЃСЏ РєРѕРјРїРѕСЂС‚
     if WaitForSingleObject(PRcd_HCC.mtxCom, 5000) <> WAIT_TIMEOUT then
       begin
         case self.PRcd_HCC.typ of
@@ -508,8 +508,8 @@ procedure ThHCC_UN.Execute;
         end;
         ReleaseMutex(PRcd_HCC.mtxCom);
       end
-    else // возвращает ошибки устройства
-      PrtCriticalMessage('ThHCC_UN' + PRcd_HCC.com + ' порт занят', self.PRcd_HCC.criticalHandle);
+    else // РІРѕР·РІСЂР°С‰Р°РµС‚ РѕС€РёР±РєРё СѓСЃС‚СЂРѕР№СЃС‚РІР°
+      PrtCriticalMessage('ThHCC_UN' + PRcd_HCC.com + ' РїРѕСЂС‚ Р·Р°РЅСЏС‚', self.PRcd_HCC.criticalHandle);
     OEvt.SetEvent();
     OEvt.Free;
   end;

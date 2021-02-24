@@ -158,12 +158,12 @@ procedure TCmd_HCC.PwrOffClick();
           begin
             if assigned(ThHCC_UN(pThread)) then
               ThHCC_UN(pThread).Terminate;
-            ShowMessage('Термокамера не отвечает.');
+            ShowMessage('РўРµСЂРјРѕРєР°РјРµСЂР° РЅРµ РѕС‚РІРµС‡Р°РµС‚.');
           end;
       end
     else
       begin
-        ShowMessage('Отсутствует связь с камерой тепла/холода.');
+        ShowMessage('РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ СЃРІСЏР·СЊ СЃ РєР°РјРµСЂРѕР№ С‚РµРїР»Р°/С…РѕР»РѕРґР°.');
       end;
   end;
 
@@ -186,12 +186,12 @@ procedure TCmd_HCC.PwrOnClick(ValT: single);
           begin
             if assigned(ThHCC_UN(pThread)) then
               ThHCC_UN(pThread).Terminate;
-            ShowMessage('Термокамера не отвечает.');
+            ShowMessage('РўРµСЂРјРѕРєР°РјРµСЂР° РЅРµ РѕС‚РІРµС‡Р°РµС‚.');
           end;
       end
     else
       begin
-        ShowMessage('Отсутствует связь с камерой тепла/холода.');
+        ShowMessage('РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ СЃРІСЏР·СЊ СЃ РєР°РјРµСЂРѕР№ С‚РµРїР»Р°/С…РѕР»РѕРґР°.');
       end;
   end;
 
@@ -222,13 +222,13 @@ function TCmd_HCC.GetT(var ValT: single): boolean;
             ThHCC_UN(pThread).Free;
             // ThHCC_UN(pThread).Resume;
             // ThHCC_UN(pThread).Terminate;
-            ShowMessage('Термокамера не отвечает.');
+            ShowMessage('РўРµСЂРјРѕРєР°РјРµСЂР° РЅРµ РѕС‚РІРµС‡Р°РµС‚.');
             ValT := -1000
           end;
       end
     else
       begin
-        ShowMessage('Отсутствует связь с камерой тепла/холода.');
+        ShowMessage('РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ СЃРІСЏР·СЊ СЃ РєР°РјРµСЂРѕР№ С‚РµРїР»Р°/С…РѕР»РѕРґР°.');
         ValT := -1000
       end;
   end;
@@ -309,7 +309,7 @@ procedure TForm3.bttFindClick(Sender: TObject);
     ThFndHCC.OnTerminate := OnTerminate;
     ThFndHCC.Start;
     bttFind.Enabled := false;
-    sbInfo.Panels.Items[1].Text := 'Поиск термокамеры..';
+    sbInfo.Panels.Items[1].Text := 'РџРѕРёСЃРє С‚РµСЂРјРѕРєР°РјРµСЂС‹..';
   end;
 
 procedure TForm3.OnTerminate(Sender: TObject);
@@ -317,9 +317,9 @@ procedure TForm3.OnTerminate(Sender: TObject);
     bttFind.Enabled := true;
     self.HCC.Connect := ThHCC_UN(Sender).Connect;
     if (ThHCC_UN(Sender).Connect = true) then
-      sbInfo.Panels.Items[1].Text := 'Термокамера найдена'
+      sbInfo.Panels.Items[1].Text := 'РўРµСЂРјРѕРєР°РјРµСЂР° РЅР°Р№РґРµРЅР°'
     else
-      sbInfo.Panels.Items[1].Text := 'Нет связи';
+      sbInfo.Panels.Items[1].Text := 'РќРµС‚ СЃРІСЏР·Рё';
   end;
 
 procedure TForm3.Panel1CanResize(Sender: TObject;
@@ -341,7 +341,7 @@ procedure TForm3.Button1Click(Sender: TObject);
     if (HCC.Connect = false) then
       begin
         sbInfo.Panels.Items[0].Text := '';
-        sbInfo.Panels.Items[1].Text := 'Нет связи с термокамерой';
+        sbInfo.Panels.Items[1].Text := 'РќРµС‚ СЃРІСЏР·Рё СЃ С‚РµСЂРјРѕРєР°РјРµСЂРѕР№';
       end
     else
       begin
@@ -350,7 +350,7 @@ procedure TForm3.Button1Click(Sender: TObject);
         Cmd_HCC.PwrOnClick(self.neSetT.Value);
         Cmd_HCC.Free;
         sbInfo.Panels.Items[0].Text := '';
-        sbInfo.Panels.Items[1].Text := 'камера включена';
+        sbInfo.Panels.Items[1].Text := 'РєР°РјРµСЂР° РІРєР»СЋС‡РµРЅР°';
       end;
 
   end;
@@ -362,7 +362,7 @@ procedure TForm3.Button2Click(Sender: TObject);
     if (HCC.Connect = false) then
       begin
         sbInfo.Panels.Items[0].Text := '';
-        sbInfo.Panels.Items[1].Text := 'Нет связи с термокамерой';
+        sbInfo.Panels.Items[1].Text := 'РќРµС‚ СЃРІСЏР·Рё СЃ С‚РµСЂРјРѕРєР°РјРµСЂРѕР№';
       end
     else
       begin
@@ -372,7 +372,7 @@ procedure TForm3.Button2Click(Sender: TObject);
         Cmd_HCC.Free;
 
         sbInfo.Panels.Items[0].Text := '';
-        sbInfo.Panels.Items[1].Text := 'камера остановлена';
+        sbInfo.Panels.Items[1].Text := 'РєР°РјРµСЂР° РѕСЃС‚Р°РЅРѕРІР»РµРЅР°';
       end;
   end;
 
@@ -384,7 +384,7 @@ procedure TForm3.Button3Click(Sender: TObject);
     if (HCC.Connect = false) then
       begin
         sbInfo.Panels.Items[0].Text := '';
-        sbInfo.Panels.Items[1].Text := 'Нет связи с термокамерой';
+        sbInfo.Panels.Items[1].Text := 'РќРµС‚ СЃРІСЏР·Рё СЃ С‚РµСЂРјРѕРєР°РјРµСЂРѕР№';
       end
     else
       begin
@@ -402,7 +402,7 @@ procedure TForm3.Button3Click(Sender: TObject);
           end;
 
         sbInfo.Panels.Items[0].Text := '';
-        sbInfo.Panels.Items[1].Text := 'чтение температуры';
+        sbInfo.Panels.Items[1].Text := 'С‡С‚РµРЅРёРµ С‚РµРјРїРµСЂР°С‚СѓСЂС‹';
       end;
   end;
 
@@ -442,11 +442,11 @@ procedure TForm3.FormCreate(Sender: TObject);
     // AdvSg_TI.OnEditCellDone   := OnEditCellDone;
     AdvSg_TI.DefaultColWidth := 80;
     AdvSg_TI.ColWidths[0] := 120;
-    AdvSg_TI.Cells[0, 0] := 'Температура';
-    AdvSg_TI.Cells[0, 2] := 'T[C°]';
-    AdvSg_TI.Cells[0, 3] := 'Время';
-    AdvSg_TI.Cells[0, 4] := 'Задержка  ';
-    AdvSg_TI.Cells[0, 5] := 'Измерение ';
+    AdvSg_TI.Cells[0, 0] := 'РўРµРјРїРµСЂР°С‚СѓСЂР°';
+    AdvSg_TI.Cells[0, 2] := 'T[CВ°]';
+    AdvSg_TI.Cells[0, 3] := 'Р’СЂРµРјСЏ';
+    AdvSg_TI.Cells[0, 4] := 'Р—Р°РґРµСЂР¶РєР°  ';
+    AdvSg_TI.Cells[0, 5] := 'РР·РјРµСЂРµРЅРёРµ ';
 
     sbInfo.Panels.Add;
     sbInfo.Panels.Add;
@@ -465,8 +465,8 @@ procedure TForm3.FormCreate(Sender: TObject);
     self.HCC.mtxCom := CreateMutex(nil, false, nil);
     Chart.Series[0].Clear;
     Chart.Series[1].Clear;
-    Chart.Series[0].Title := 'T[C°]';
-    Chart.Series[1].Title := 'Метки';
+    Chart.Series[0].Title := 'T[CВ°]';
+    Chart.Series[1].Title := 'РњРµС‚РєРё';
   end;
 
 procedure TForm3.FormShow(Sender: TObject);
@@ -512,14 +512,14 @@ procedure TForm3.SavePoint();
 
         vH := Prj.points[i].time div 60;
         vM := Prj.points[i].time - (vH * 60);
-        self.AdvSg_TI.Cells[1 + i, 4] := IntToStr(vH) + 'ч. ' + IntToStr(vM)
-            + 'м.';
+        self.AdvSg_TI.Cells[1 + i, 4] := IntToStr(vH) + 'С‡. ' + IntToStr(vM)
+            + 'Рј.';
 
         vH := Prj.points[i].delay div 60;
         vM := Prj.points[i].delay - (vH * 60);
-        self.AdvSg_TI.Cells[1 + i, 5] := IntToStr(vH) + 'ч. ' + IntToStr(vM)
-            + 'м.';
-        // IntToStr(FTime.neHour.IntValue)+'ч. '+IntToStr(FTime.neMinuts.IntValue)+'м.';
+        self.AdvSg_TI.Cells[1 + i, 5] := IntToStr(vH) + 'С‡. ' + IntToStr(vM)
+            + 'Рј.';
+        // IntToStr(FTime.neHour.IntValue)+'С‡. '+IntToStr(FTime.neMinuts.IntValue)+'Рј.';
 
         // self.AdvSg_TI.Cells[1+i,4]:=IntToStr(Prj.points[i].time);
         // self.AdvSg_TI.Cells[1+i,5]:=IntToStr(Prj.points[i].delay);
@@ -547,20 +547,20 @@ procedure TForm3.TimeToSring(var valHour: integer; var valMinuts: integer;
     idx0, idx1: integer;
   begin
     idx0 := 1;
-    idx1 := pos('ч. ', sTime);
+    idx1 := pos('С‡. ', sTime);
     sH := copy(sTime, idx0, idx1 - idx0);
     TryStrToInt(sH, valHour);
 
-    idx0 := pos('ч. ', sTime);
-    idx1 := pos('м.', sTime);
+    idx0 := pos('С‡. ', sTime);
+    idx1 := pos('Рј.', sTime);
     sM := copy(sTime, idx0 + 3, idx1 - idx0 - 3);
     TryStrToInt(sM, valMinuts);
   end;
 
 procedure TForm3.OnlClickCellAdvSG(Sender: TObject; ARow, ACol: integer);
   const
-    Captions: array [0 .. 1] of string = ('Установить время задержки',
-      'Установить время измерения');
+    Captions: array [0 .. 1] of string = ('РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РІСЂРµРјСЏ Р·Р°РґРµСЂР¶РєРё',
+      'РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РІСЂРµРјСЏ РёР·РјРµСЂРµРЅРёСЏ');
   var
     Rect: TRect;
     H, M: integer;
@@ -577,7 +577,7 @@ procedure TForm3.OnlClickCellAdvSG(Sender: TObject; ARow, ACol: integer);
         if (FTime.ShowModal = mrYes) then
           begin
             AdvSg_TI.Cells[ACol, ARow] := IntToStr(FTime.neHour.IntValue)
-                + 'ч. ' + IntToStr(FTime.neMinuts.IntValue) + 'м.';
+                + 'С‡. ' + IntToStr(FTime.neMinuts.IntValue) + 'Рј.';
           end;
       end;
   end;
@@ -694,7 +694,7 @@ procedure TForm3.bttStartAutoClick(Sender: TObject);
     if (HCC.Connect = false) then
       begin
         sbInfo.Panels.Items[0].Text := '';
-        sbInfo.Panels.Items[1].Text := 'Нет связи с термокамерой';
+        sbInfo.Panels.Items[1].Text := 'РќРµС‚ СЃРІСЏР·Рё СЃ С‚РµСЂРјРѕРєР°РјРµСЂРѕР№';
       end;
 
     delta := 0;
@@ -713,12 +713,12 @@ procedure TForm3.bttStartAutoClick(Sender: TObject);
         CPoint := i;
         Stage := 0;
         // CurrPoint:=prj.points[CPoint];
-        // включаем термокамеру на определённую температуру
+        // РІРєР»СЋС‡Р°РµРј С‚РµСЂРјРѕРєР°РјРµСЂСѓ РЅР° РѕРїСЂРµРґРµР»С‘РЅРЅСѓСЋ С‚РµРјРїРµСЂР°С‚СѓСЂСѓ
         Cmd_HCC := TCmd_HCC.Create(HCC);
         Cmd_HCC.Connect := HCC.Connect;
         Cmd_HCC.PwrOnClick(Prj.points[CPoint].temp);
         Cmd_HCC.Free;
-        // включаем опрос термокамеры
+        // РІРєР»СЋС‡Р°РµРј РѕРїСЂРѕСЃ С‚РµСЂРјРѕРєР°РјРµСЂС‹
         OThHCC := ThHCC_UN.CreateMthr(HCC, HCCMeasuring);
         OThHCC.Start;
         OWait.WaitForThTerminate(INFINITE, OThHCC.OEvt);
@@ -733,9 +733,9 @@ procedure TForm3.bttStartAutoClick(Sender: TObject);
     Cmd_HCC.Free;
 
     sbInfo.Panels.Items[0].Text := '';
-    sbInfo.Panels.Items[1].Text := 'Камера остановлена';
+    sbInfo.Panels.Items[1].Text := 'РљР°РјРµСЂР° РѕСЃС‚Р°РЅРѕРІР»РµРЅР°';
 
-    ShowMessage('Термокамера отключена!');
+    ShowMessage('РўРµСЂРјРѕРєР°РјРµСЂР° РѕС‚РєР»СЋС‡РµРЅР°!');
 
     OWait.Free;
     bttStartAuto.Enabled := true;
@@ -746,18 +746,18 @@ procedure TForm3.HCCMeasuring(val: single);
   begin
     // Chart.Series[0].AddXY((now - StartTime) * 1440, Val);
     Chart.Series[0].AddXY(Now, val);
-    sbInfo.Panels.Items[0].Text := 'Точка Т' + IntToStr(CPoint + 1)
+    sbInfo.Panels.Items[0].Text := 'РўРѕС‡РєР° Рў' + IntToStr(CPoint + 1)
         + '=' + FloatToStrF(Prj.points[CPoint].temp, ffFixed, 4, 2);
 
     case Stage of
       0:
-        begin // ожидаем приближение к точке по температуре
+        begin // РѕР¶РёРґР°РµРј РїСЂРёР±Р»РёР¶РµРЅРёРµ Рє С‚РѕС‡РєРµ РїРѕ С‚РµРјРїРµСЂР°С‚СѓСЂРµ
           sbInfo.Panels.Items[1].Text :=
-              'Ожидаем приближение к точке по температуре: ' + FloatToStrF
+              'РћР¶РёРґР°РµРј РїСЂРёР±Р»РёР¶РµРЅРёРµ Рє С‚РѕС‡РєРµ РїРѕ С‚РµРјРїРµСЂР°С‚СѓСЂРµ: ' + FloatToStrF
               (abs(Prj.points[CPoint].temp - val), ffFixed, 4, 2) + '>=1';
-          // inc(delta);//для проверки
+          // inc(delta);//РґР»СЏ РїСЂРѕРІРµСЂРєРё
           if (abs(Prj.points[CPoint].temp - val) < 1) then
-            // if(delta>10)then//для проверки
+            // if(delta>10)then//РґР»СЏ РїСЂРѕРІРµСЂРєРё
             begin
               Chart.Series[1].AddXY(Now, val, '', clRed);
               inc(Stage);
@@ -766,9 +766,9 @@ procedure TForm3.HCCMeasuring(val: single);
             end;
         end;
       1:
-        begin // ожидаем окончание таймера Задержки
+        begin // РѕР¶РёРґР°РµРј РѕРєРѕРЅС‡Р°РЅРёРµ С‚Р°Р№РјРµСЂР° Р—Р°РґРµСЂР¶РєРё
           sbInfo.Panels.Items[1].Text :=
-              'До истечении таймера "Задержки" осталось: ' + FloatToStrF
+              'Р”Рѕ РёСЃС‚РµС‡РµРЅРёРё С‚Р°Р№РјРµСЂР° "Р—Р°РґРµСЂР¶РєРё" РѕСЃС‚Р°Р»РѕСЃСЊ: ' + FloatToStrF
               (StopTime - ((Now - StartTime) * 1440), ffFixed, 4, 1);
           if (StopTime < ((Now - StartTime) * 1440)) then
             begin
@@ -780,9 +780,9 @@ procedure TForm3.HCCMeasuring(val: single);
 
         end;
       2:
-        begin // ожидаем окончание таймера Измерения
+        begin // РѕР¶РёРґР°РµРј РѕРєРѕРЅС‡Р°РЅРёРµ С‚Р°Р№РјРµСЂР° РР·РјРµСЂРµРЅРёСЏ
           sbInfo.Panels.Items[1].Text :=
-              'До истечении таймера "Измерения" осталось: ' + FloatToStrF
+              'Р”Рѕ РёСЃС‚РµС‡РµРЅРёРё С‚Р°Р№РјРµСЂР° "РР·РјРµСЂРµРЅРёСЏ" РѕСЃС‚Р°Р»РѕСЃСЊ: ' + FloatToStrF
               (StopTime - ((Now - StartTime) * 1440), ffFixed, 4, 1);
           if (StopTime < ((Now - StartTime) * 1440)) then
             begin

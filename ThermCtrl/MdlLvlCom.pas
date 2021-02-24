@@ -23,10 +23,10 @@ type
     private
       LLCom: TLowLvlUAI;
     public
-      CErr: boolean; // наличие критической ошибки
-      sbSign: boolean; // работать с изменёнными параметрами
-      ErrCrF: boolean; // наличие критической ошибки
-      ErrCrName: string; // описание критической ошибки
+      CErr: boolean; // РЅР°Р»РёС‡РёРµ РєСЂРёС‚РёС‡РµСЃРєРѕР№ РѕС€РёР±РєРё
+      sbSign: boolean; // СЂР°Р±РѕС‚Р°С‚СЊ СЃ РёР·РјРµРЅС‘РЅРЅС‹РјРё РїР°СЂР°РјРµС‚СЂР°РјРё
+      ErrCrF: boolean; // РЅР°Р»РёС‡РёРµ РєСЂРёС‚РёС‡РµСЃРєРѕР№ РѕС€РёР±РєРё
+      ErrCrName: string; // РѕРїРёСЃР°РЅРёРµ РєСЂРёС‚РёС‡РµСЃРєРѕР№ РѕС€РёР±РєРё
       function FindDev(var Add: byte): boolean;
       function GetTrase(var str: string): boolean;
       procedure SetVal(var id: rID); // @LLCom.Val.arr,LLCom.Val.n,Def,sign,strErr);
@@ -100,7 +100,7 @@ function TMdlLvlCom.FindDev(var Add: byte): boolean;
         if fe = EBUSY then
           begin
             ErrCrF := true;
-            ErrCrName := 'Компорт занят!';
+            ErrCrName := 'РљРѕРјРїРѕСЂС‚ Р·Р°РЅСЏС‚!';
           end;
       end;
   end;
@@ -127,7 +127,7 @@ function TMdlLvlCom.GetTrase(var str: string): boolean;
 
 function TMdlLvlCom.TrRd(tDef: typeID; n: byte): EnErr;
   var
-    rpt: byte; // количество повторных операций
+    rpt: byte; // РєРѕР»РёС‡РµСЃС‚РІРѕ РїРѕРІС‚РѕСЂРЅС‹С… РѕРїРµСЂР°С†РёР№
     itWasBe: EnErr;
   begin
     itWasBe := OK;
@@ -143,27 +143,27 @@ function TMdlLvlCom.TrRd(tDef: typeID; n: byte): EnErr;
             begin
             end;
           EBUSY:
-            begin // если ком порт занят
+            begin // РµСЃР»Рё РєРѕРј РїРѕСЂС‚ Р·Р°РЅСЏС‚
               if itWasBe <> EBUSY then
                 rpt := 5;
             end;
           EUNDEFTYPE:
-            begin // неподдерживаемый тип прибора
+            begin // РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С‚РёРї РїСЂРёР±РѕСЂР°
               if itWasBe <> EUNDEFTYPE then
                 rpt := 0;
             end;
           EIMPOSSIBLE:
-            begin // невозможное поле
+            begin // РЅРµРІРѕР·РјРѕР¶РЅРѕРµ РїРѕР»Рµ
               if itWasBe <> EIMPOSSIBLE then
                 rpt := 1;
             end;
           EEXCEPT:
-            begin // произола ошибка преобразовани
+            begin // РїСЂРѕРёР·РѕР»Р° РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРё
               if itWasBe <> EEXCEPT then
                 rpt := 1;
             end;
           EFAIL:
-            begin // завершение операции не привело к успеху
+            begin // Р·Р°РІРµСЂС€РµРЅРёРµ РѕРїРµСЂР°С†РёРё РЅРµ РїСЂРёРІРµР»Рѕ Рє СѓСЃРїРµС…Сѓ
               if itWasBe <> EFAIL then
                 rpt := 0;
             end;
@@ -173,7 +173,7 @@ function TMdlLvlCom.TrRd(tDef: typeID; n: byte): EnErr;
                 rpt := 1;
             end;
           ETOT:
-            begin // нет ответа
+            begin // РЅРµС‚ РѕС‚РІРµС‚Р°
               if itWasBe <> ETOT then
                 rpt := 1;
             end;
@@ -191,12 +191,12 @@ procedure TMdlLvlCom.SetCriticalErr(Err: EnErr);
       EBUSY:
         begin
           ErrCrF := true;
-          ErrCrName := 'Компорт занят!';
+          ErrCrName := 'РљРѕРјРїРѕСЂС‚ Р·Р°РЅСЏС‚!';
         end;
       ETOT:
         begin
           ErrCrF := true;
-          ErrCrName := 'Нет ответа от прибора!';
+          ErrCrName := 'РќРµС‚ РѕС‚РІРµС‚Р° РѕС‚ РїСЂРёР±РѕСЂР°!';
         end;
       else
         begin
@@ -207,13 +207,13 @@ procedure TMdlLvlCom.SetCriticalErr(Err: EnErr);
   end;
 
 function TMdlLvlCom.RdPar(var Def: rID; len: byte): boolean;
-// считать параметр
+// СЃС‡РёС‚Р°С‚СЊ РїР°СЂР°РјРµС‚СЂ
   begin
     result := RdPar(0, Def, len);
   end;
 
 function TMdlLvlCom.RdPar(ch: byte; var Def: rID; len: byte): boolean;
-  // считать параметр
+  // СЃС‡РёС‚Р°С‚СЊ РїР°СЂР°РјРµС‚СЂ
   var
     // len:byte;
     id: typeID;
@@ -251,7 +251,7 @@ function TMdlLvlCom.RdPar(ch: byte; var Def: rID; len: byte): boolean;
             begin
               strErr := LLCom.getStrErr;
             end;
-        CErr := true; // присутствие критической ошибки
+        CErr := true; // РїСЂРёСЃСѓС‚СЃС‚РІРёРµ РєСЂРёС‚РёС‡РµСЃРєРѕР№ РѕС€РёР±РєРё
       end;
     SetCriticalErr(LLCom.GetErr);
   end;
@@ -284,7 +284,7 @@ procedure TMdlLvlCom.SetVal(var id: rID);
   end;
 
 function TMdlLvlCom.WrPar(ch: byte; var Def: rID; len: byte): boolean;
-  // записать параметр
+  // Р·Р°РїРёСЃР°С‚СЊ РїР°СЂР°РјРµС‚СЂ
   var
     id: typeID;
     ptr: pointer;
@@ -295,8 +295,8 @@ function TMdlLvlCom.WrPar(ch: byte; var Def: rID; len: byte): boolean;
     if sbSign then
       begin
         sign := Def.sign;
-        if sign = SignTrue then // не пишится если значение такоеже как и в приборе и приэтом
-          begin // стоит галка проверки условия
+        if sign = SignTrue then // РЅРµ РїРёС€РёС‚СЃСЏ РµСЃР»Рё Р·РЅР°С‡РµРЅРёРµ С‚Р°РєРѕРµР¶Рµ РєР°Рє Рё РІ РїСЂРёР±РѕСЂРµ Рё РїСЂРёСЌС‚РѕРј
+          begin // СЃС‚РѕРёС‚ РіР°Р»РєР° РїСЂРѕРІРµСЂРєРё СѓСЃР»РѕРІРёСЏ
             result := true;
             exit;
           end;
@@ -310,7 +310,7 @@ function TMdlLvlCom.WrPar(ch: byte; var Def: rID; len: byte): boolean;
     if sign = SignNIni then
       begin
         result := true;
-        exit; // не пропишится если параметры случайные
+        exit; // РЅРµ РїСЂРѕРїРёС€РёС‚СЃСЏ РµСЃР»Рё РїР°СЂР°РјРµС‚СЂС‹ СЃР»СѓС‡Р°Р№РЅС‹Рµ
       end;
     ptr := Def.pVal;
     // len:=OperateID.GetLenVal(Def.TP);
@@ -332,14 +332,14 @@ function TMdlLvlCom.WrPar(ch: byte; var Def: rID; len: byte): boolean;
             begin
               strErr := LLCom.getStrErr;
             end;
-        CErr := true; // присутствие критической ошибки
+        CErr := true; // РїСЂРёСЃСѓС‚СЃС‚РІРёРµ РєСЂРёС‚РёС‡РµСЃРєРѕР№ РѕС€РёР±РєРё
         Def.sign := SignErr;
         Def.strErr := strErr;
       end;
   end;
 
 function TMdlLvlCom.WrPar(var Def: rID; len: byte): boolean;
-  // записать параметр
+  // Р·Р°РїРёСЃР°С‚СЊ РїР°СЂР°РјРµС‚СЂ
   begin
     result := WrPar(0, Def, len);
   end;

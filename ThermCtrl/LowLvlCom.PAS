@@ -20,22 +20,22 @@ type
     TP: EnType;
     Name: String;
     hint: String;
-    represent: BYTE; // Представление 0-отсутствует 1-combobox 2-checkBox
-    // List: aList; // набор параметров для визуализации
-    sign: TSign; // достоверность /цвет
-    strErr: string; // код ошибки
+    represent: BYTE; // РџСЂРµРґСЃС‚Р°РІР»РµРЅРёРµ 0-РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ 1-combobox 2-checkBox
+    // List: aList; // РЅР°Р±РѕСЂ РїР°СЂР°РјРµС‚СЂРѕРІ РґР»СЏ РІРёР·СѓР°Р»РёР·Р°С†РёРё
+    sign: TSign; // РґРѕСЃС‚РѕРІРµСЂРЅРѕСЃС‚СЊ /С†РІРµС‚
+    strErr: string; // РєРѕРґ РѕС€РёР±РєРё
     // Hart: rIDHart;
   end;
 
   TPID = ^rID;
 
   rByte = record
-    val: UInt8; // значение
+    val: UInt8; // Р·РЅР°С‡РµРЅРёРµ
     id: rID;
   end;
 
   rSingle = record
-    val: single; // значение
+    val: single; // Р·РЅР°С‡РµРЅРёРµ
     id: rID;
   end;
 
@@ -88,27 +88,27 @@ type
 
   EnBCUAI = (UNDEF = 2, UAI_LIGHT = 1, UAI_FULL = 0);
 
-  EnBCRet = (EZERO = 0, // успешное завершение.
-    ENOCMD = 1, // команда не найдена.
-    EINVALCMD = 2, // неверный формат команды.
-    ENOPAR = 3, // параметр не найден.
-    EPERM = 4, // нарушение прав доступа.
-    EACCESS = 5, // ошибка чтения (в том числе при несовпадении CRC) и записи параметра (параметр только для чтения, область данных хранения параметра защищена от записи).
-    ERANGE = 6, // выход параметра за границу диапазона
-    ENOENT = 7, // файл не найден
-    ENOMEM = 8, // нехватает памяти.
-    EBADF = 9, // недопустимый идентификатор файла или идентификатор не ссылается на открытый файл.
-    ENOSPC = 10, // отсутствует место на физическом носителе.
+  EnBCRet = (EZERO = 0, // СѓСЃРїРµС€РЅРѕРµ Р·Р°РІРµСЂС€РµРЅРёРµ.
+    ENOCMD = 1, // РєРѕРјР°РЅРґР° РЅРµ РЅР°Р№РґРµРЅР°.
+    EINVALCMD = 2, // РЅРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ РєРѕРјР°РЅРґС‹.
+    ENOPAR = 3, // РїР°СЂР°РјРµС‚СЂ РЅРµ РЅР°Р№РґРµРЅ.
+    EPERM = 4, // РЅР°СЂСѓС€РµРЅРёРµ РїСЂР°РІ РґРѕСЃС‚СѓРїР°.
+    EACCESS = 5, // РѕС€РёР±РєР° С‡С‚РµРЅРёСЏ (РІ С‚РѕРј С‡РёСЃР»Рµ РїСЂРё РЅРµСЃРѕРІРїР°РґРµРЅРёРё CRC) Рё Р·Р°РїРёСЃРё РїР°СЂР°РјРµС‚СЂР° (РїР°СЂР°РјРµС‚СЂ С‚РѕР»СЊРєРѕ РґР»СЏ С‡С‚РµРЅРёСЏ, РѕР±Р»Р°СЃС‚СЊ РґР°РЅРЅС‹С… С…СЂР°РЅРµРЅРёСЏ РїР°СЂР°РјРµС‚СЂР° Р·Р°С‰РёС‰РµРЅР° РѕС‚ Р·Р°РїРёСЃРё).
+    ERANGE = 6, // РІС‹С…РѕРґ РїР°СЂР°РјРµС‚СЂР° Р·Р° РіСЂР°РЅРёС†Сѓ РґРёР°РїР°Р·РѕРЅР°
+    ENOENT = 7, // С„Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ
+    ENOMEM = 8, // РЅРµС…РІР°С‚Р°РµС‚ РїР°РјСЏС‚Рё.
+    EBADF = 9, // РЅРµРґРѕРїСѓСЃС‚РёРјС‹Р№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ С„Р°Р№Р»Р° РёР»Рё РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РЅРµ СЃСЃС‹Р»Р°РµС‚СЃСЏ РЅР° РѕС‚РєСЂС‹С‚С‹Р№ С„Р°Р№Р».
+    ENOSPC = 10, // РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РјРµСЃС‚Рѕ РЅР° С„РёР·РёС‡РµСЃРєРѕРј РЅРѕСЃРёС‚РµР»Рµ.
     EUNDEF = 11, EFALSE = 255);
   EnBCStat = (Success = 0, Pass = 1, Failure = 2, Unsuccessful = 3);
-  EnErr = (OK = 0, EBUSY = 1, // если ком порт занят
-    EUNDEFTYPE = 2, // неподдерживаемый тип прибора
-    EIMPOSSIBLE = 3, // невозможное поле
-    EEXCEPT = 5, // произола ошибка преобразовани
-    EPROTOCOL = 6, // неподдерживаемый протокол
-    EFAIL = 7, // завершение операции не привело к успеху
-    EDISASSEMBLE = 8, // ошибка преобразования
-    ETOT = 9 // нет ответа
+  EnErr = (OK = 0, EBUSY = 1, // РµСЃР»Рё РєРѕРј РїРѕСЂС‚ Р·Р°РЅСЏС‚
+    EUNDEFTYPE = 2, // РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С‚РёРї РїСЂРёР±РѕСЂР°
+    EIMPOSSIBLE = 3, // РЅРµРІРѕР·РјРѕР¶РЅРѕРµ РїРѕР»Рµ
+    EEXCEPT = 5, // РїСЂРѕРёР·РѕР»Р° РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРё
+    EPROTOCOL = 6, // РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ РїСЂРѕС‚РѕРєРѕР»
+    EFAIL = 7, // Р·Р°РІРµСЂС€РµРЅРёРµ РѕРїРµСЂР°С†РёРё РЅРµ РїСЂРёРІРµР»Рѕ Рє СѓСЃРїРµС…Сѓ
+    EDISASSEMBLE = 8, // РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ
+    ETOT = 9 // РЅРµС‚ РѕС‚РІРµС‚Р°
       );
 
   TPCL0_CMD = (enPCL0_CMD_RSD, enPCL0_CMD_RRD, enPCL0_CMD_WSD, enPCL0_CMD_WRD,
@@ -121,18 +121,18 @@ type
       ct: COMMTIMEOUTS;
       signBeginRx, signBeginTx, signEndRx: AnsiChar;
       fEnCRC: Boolean;
-      NCom: string; // номер порта
-      NSpd: string; // скорость порта
-      NAdd: BYTE; // сетевой адрес
-      NStopBit: BYTE; // сетевой адрес
+      NCom: string; // РЅРѕРјРµСЂ РїРѕСЂС‚Р°
+      NSpd: string; // СЃРєРѕСЂРѕСЃС‚СЊ РїРѕСЂС‚Р°
+      NAdd: BYTE; // СЃРµС‚РµРІРѕР№ Р°РґСЂРµСЃ
+      NStopBit: BYTE; // СЃРµС‚РµРІРѕР№ Р°РґСЂРµСЃ
 
       phPort: ^THandle;
-      buffRx: AnsiString; // строка вывода
+      buffRx: AnsiString; // СЃС‚СЂРѕРєР° РІС‹РІРѕРґР°
       OnMessPreview: function(bRx: AnsiString; len: Integer): Boolean of Object;
       // OnCreatParcel : function (str: AnsiString): AnsiString of Object;
 
-      semi: array [0 .. 10] of BYTE; // позиционированние знаков ';' в buffRx
-      nSemi: BYTE; // количество точек с запятыми
+      semi: array [0 .. 10] of BYTE; // РїРѕР·РёС†РёРѕРЅРёСЂРѕРІР°РЅРЅРёРµ Р·РЅР°РєРѕРІ ';' РІ buffRx
+      nSemi: BYTE; // РєРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕС‡РµРє СЃ Р·Р°РїСЏС‚С‹РјРё
       IndEnd, IndStart: BYTE;
 
       function MessPreview(bRx: AnsiString; len: Integer): Boolean;
@@ -172,13 +172,13 @@ type
     private
       Err: EnErr;
 
-      BC: record TCom: EnBCUAI; // тип комманды двухтакт/однатактна
-      RW: BYTE; // комманда чтения или записи
-      NCmd: BYTE; // номер комманды
-      TDev: BYTE; // тип прибора
-      Stat: EnBCStat; // состояние регистра статуса
-      CRet: EnBCRet; // код ошибки возврата
-      fVal: real; // результат комманды 'cmd1'
+      BC: record TCom: EnBCUAI; // С‚РёРї РєРѕРјРјР°РЅРґС‹ РґРІСѓС…С‚Р°РєС‚/РѕРґРЅР°С‚Р°РєС‚РЅР°
+      RW: BYTE; // РєРѕРјРјР°РЅРґР° С‡С‚РµРЅРёСЏ РёР»Рё Р·Р°РїРёСЃРё
+      NCmd: BYTE; // РЅРѕРјРµСЂ РєРѕРјРјР°РЅРґС‹
+      TDev: BYTE; // С‚РёРї РїСЂРёР±РѕСЂР°
+      Stat: EnBCStat; // СЃРѕСЃС‚РѕСЏРЅРёРµ СЂРµРіРёСЃС‚СЂР° СЃС‚Р°С‚СѓСЃР°
+      CRet: EnBCRet; // РєРѕРґ РѕС€РёР±РєРё РІРѕР·РІСЂР°С‚Р°
+      fVal: real; // СЂРµР·СѓР»СЊС‚Р°С‚ РєРѕРјРјР°РЅРґС‹ 'cmd1'
   end;
 
 function isxdigit_M(b: AnsiChar): BYTE;
@@ -192,9 +192,9 @@ function UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
 
 public
 
-  val: record // принятые данные,выделенные из buffRx и преобразов в численный вид
-      arr: ArrayMass; // данные
-  n: BYTE; // размер данных
+  val: record // РїСЂРёРЅСЏС‚С‹Рµ РґР°РЅРЅС‹Рµ,РІС‹РґРµР»РµРЅРЅС‹Рµ РёР· buffRx Рё РїСЂРµРѕР±СЂР°Р·РѕРІ РІ С‡РёСЃР»РµРЅРЅС‹Р№ РІРёРґ
+      arr: ArrayMass; // РґР°РЅРЅС‹Рµ
+  n: BYTE; // СЂР°Р·РјРµСЂ РґР°РЅРЅС‹С…
   end;
   fTestMode: Boolean;
   // TpeID:EnType;
@@ -286,7 +286,7 @@ const
     $C1, $81, $40, $01, $C0, $80, $41, $01, $C0, $80, $41, $00, $C1, $81, $40,
     $00, $C1, $81, $40, $01, $C0, $80, $41, $00, $C1, $81, $40, $01, $C0, $80,
     $41, $01, $C0, $80, $41, $00, $C1, $81, $40);
-  { Table of CRC values for low–order byte }
+  { Table of CRC values for lowвЂ“order byte }
   tableCRC16Lo: array [0 .. 255] of BYTE = ($00, $C0, $C1, $01, $C3, $03, $02,
     $C2, $C6, $06, $07, $C7, $05, $C5, $C4, $04, $CC, $0C, $0D, $CD, $0F, $CF,
     $CE, $0E, $0A, $CA, $CB, $0B, $C9, $09, $08, $C8, $D8, $18, $19, $D9, $1B,
@@ -314,7 +314,7 @@ function TLLvl_MBUS.MessPreview(bRx: AnsiString; len: Integer): Boolean;
     i, j: Integer;
     crc: Word;
   begin
-    { написать разбор посылки }
+    { РЅР°РїРёСЃР°С‚СЊ СЂР°Р·Р±РѕСЂ РїРѕСЃС‹Р»РєРё }
     result := False;
     if len >= lenRxTotal then
       begin
@@ -332,7 +332,7 @@ function TLLvl_MBUS.MessPreview(bRx: AnsiString; len: Integer): Boolean;
               if (buff[i + 1] and $7F) = self.cmd then
                 begin
                   if (buff[i + 1] and $80) = 80 then
-                    begin // ответ с кодом ошибки
+                    begin // РѕС‚РІРµС‚ СЃ РєРѕРґРѕРј РѕС€РёР±РєРё
                       if (i + 5) <= len then
                         begin
                           crc := self.CalcCRCMBUS(@buff[i], 3);
@@ -588,7 +588,7 @@ function TProtocolNet_PhisicalLvl.OpenComPort(): Boolean;
       begin
         if not tryStrToInt(NSpd, valSpd) then
           begin
-            showMessage('Попытка установить кривую скорость: ' + NSpd);
+            showMessage('РџРѕРїС‹С‚РєР° СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РєСЂРёРІСѓСЋ СЃРєРѕСЂРѕСЃС‚СЊ: ' + NSpd);
             result := False;
             exit;
           end;
@@ -658,7 +658,7 @@ function TProtocolNet_PhisicalLvl.OpenComPort(): Boolean;
       end
     else
       begin
-        AddList('OpenComPort', 'Неудалось открыть ком порт');
+        AddList('OpenComPort', 'РќРµСѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ РєРѕРј РїРѕСЂС‚');
         phPort^ := 0;
       end;
   end;
@@ -993,18 +993,18 @@ function TProtocolNet_PhisicalLvl.MessPreview(bRx: AnsiString;
     add, i, j, x: Integer;
     str: AnsiString;
   begin
-    { написать разбор посылки }
+    { РЅР°РїРёСЃР°С‚СЊ СЂР°Р·Р±РѕСЂ РїРѕСЃС‹Р»РєРё }
     result := False;
     IndEnd := 0;
     IndStart := 0;
     setlength(str, 255);
 
-    for i := len downto 1 do // поиск #13
+    for i := len downto 1 do // РїРѕРёСЃРє #13
       begin
         if (bRx[i] = self.signEndRx) then
           begin
             IndEnd := i;
-            for j := i downto 1 do // поиск '!'
+            for j := i downto 1 do // РїРѕРёСЃРє '!'
               begin
                 if (bRx[j] = self.signBeginRx) then
                   begin
@@ -1020,7 +1020,7 @@ function TProtocolNet_PhisicalLvl.MessPreview(bRx: AnsiString;
         if self.fEnCRC then
           begin
             nSemi := 0;
-            for i := IndStart + 2 to IndEnd - 2 do // помечаем ';'
+            for i := IndStart + 2 to IndEnd - 2 do // РїРѕРјРµС‡Р°РµРј ';'
               begin
                 if bRx[i] = ';' then
                   begin
@@ -1044,19 +1044,19 @@ function TProtocolNet_PhisicalLvl.MessPreview(bRx: AnsiString;
                           begin
                             result := False;
                             AddList('MessPreview',
-                              'ожидался адрес ' + IntToStr(NAdd)
-                                  + ' получен ' + string(str));
+                              'РѕР¶РёРґР°Р»СЃСЏ Р°РґСЂРµСЃ ' + IntToStr(NAdd)
+                                  + ' РїРѕР»СѓС‡РµРЅ ' + string(str));
                           end
                       end
                     else
                       AddList('MessPreview',
-                        'ожидался адрес ' + IntToStr(NAdd)
-                            + ' получен ' + string(str));
+                        'РѕР¶РёРґР°Р»СЃСЏ Р°РґСЂРµСЃ ' + IntToStr(NAdd)
+                            + ' РїРѕР»СѓС‡РµРЅ ' + string(str));
 
                   end;
               end
             else
-              AddList('MessPreview', 'ошибка контрольной суммы' + string(bRx));
+              AddList('MessPreview', 'РѕС€РёР±РєР° РєРѕРЅС‚СЂРѕР»СЊРЅРѕР№ СЃСѓРјРјС‹' + string(bRx));
           end
         else
           begin
@@ -1117,7 +1117,7 @@ function TProtocolNet_PhisicalLvl.TransactionLL(TxBuff: TRxTxBuff;
         ovl.hEvent := CreateEvent(nil, False, False, nil);
         WriteFile(phPort^, TxBuff { AnsiString(pBuffTx^) } , TxLen
           { length(str) } , i, @ovl);
-        // set ovl.event= событие порта
+        // set ovl.event= СЃРѕР±С‹С‚РёРµ РїРѕСЂС‚Р°
         TransactionLL := ETOT;
         buffRx := '';
         setlength(buffRx, 0);
@@ -1130,16 +1130,16 @@ function TProtocolNet_PhisicalLvl.TransactionLL(TxBuff: TRxTxBuff;
               WAIT_OBJECT_0:
                 begin
                   if (GetOverlappedResult(phPort^, ovl, temp, True)) then
-                    // проверяем, успешно ли завершилась
-                    // перекрываемая операция WaitCommEvent
+                    // РїСЂРѕРІРµСЂСЏРµРј, СѓСЃРїРµС€РЅРѕ Р»Рё Р·Р°РІРµСЂС€РёР»Р°СЃСЊ
+                    // РїРµСЂРµРєСЂС‹РІР°РµРјР°СЏ РѕРїРµСЂР°С†РёСЏ WaitCommEvent
                     if ((evFlag and EV_RXCHAR) <> 0) then
-                      // если произошло именно событие прихода байта
+                      // РµСЃР»Рё РїСЂРѕРёР·РѕС€Р»Рѕ РёРјРµРЅРЅРѕ СЃРѕР±С‹С‚РёРµ РїСЂРёС…РѕРґР° Р±Р°Р№С‚Р°
                       begin
                         ClearCommError(phPort^, temp, @curstat);
-                        // нужно заполнить структуру COMSTAT
+                        // РЅСѓР¶РЅРѕ Р·Р°РїРѕР»РЅРёС‚СЊ СЃС‚СЂСѓРєС‚СѓСЂСѓ COMSTAT
                         btr := curstat.cbInQue;
-                        // получить количество принятых байтов
-                        if (btr <> 0) then // если в буфере порта есть непрочитанные байты
+                        // РїРѕР»СѓС‡РёС‚СЊ РєРѕР»РёС‡РµСЃС‚РІРѕ РїСЂРёРЅСЏС‚С‹С… Р±Р°Р№С‚РѕРІ
+                        if (btr <> 0) then // РµСЃР»Рё РІ Р±СѓС„РµСЂРµ РїРѕСЂС‚Р° РµСЃС‚СЊ РЅРµРїСЂРѕС‡РёС‚Р°РЅРЅС‹Рµ Р±Р°Р№С‚С‹
                           begin
                             for i := 0 to 250 - 1 do
                               begin
@@ -1147,7 +1147,7 @@ function TProtocolNet_PhisicalLvl.TransactionLL(TxBuff: TRxTxBuff;
                               end;
 
                             ReadFile(phPort^, RxBuff, btr, temp, @ovl);
-                            // прочитать байты из порта в буфер программы
+                            // РїСЂРѕС‡РёС‚Р°С‚СЊ Р±Р°Р№С‚С‹ РёР· РїРѕСЂС‚Р° РІ Р±СѓС„РµСЂ РїСЂРѕРіСЂР°РјРјС‹
                             for i := 0 to btr - 1 do
                               buffRx := buffRx + RxBuff[i];
                             try
@@ -1158,7 +1158,7 @@ function TProtocolNet_PhisicalLvl.TransactionLL(TxBuff: TRxTxBuff;
                                 end;
                             except
                               AddList('MessPreview',
-                                'except ошибка преобразования');
+                                'except РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ');
                               TransactionLL := EDISASSEMBLE;
                               Break;
                             end;
@@ -1169,7 +1169,7 @@ function TProtocolNet_PhisicalLvl.TransactionLL(TxBuff: TRxTxBuff;
                 end;
               WAIT_TIMEOUT:
                 begin
-                  AddList('Transaction', 'Ошибка, истекло время ожидания!');
+                  AddList('Transaction', 'РћС€РёР±РєР°, РёСЃС‚РµРєР»Рѕ РІСЂРµРјСЏ РѕР¶РёРґР°РЅРёСЏ!');
                   TransactionLL := ETOT;
                   Break;
                 end;
@@ -1186,17 +1186,17 @@ function TProtocolNet_PhisicalLvl.TransactionLL(TxBuff: TRxTxBuff;
 // procedure TLowLvlUAI.EnNameBCRet(var v: EnBCRet;i:byte);
 // begin
 // case i of
-// 0: v:=EZERO;//     = 0, // успешное завершение.
-// 1: v:=ENOCMD;//    = 1, // команда не найдена.
-// 2: v:=EINVALCMD;// = 2, // неверный формат команды.
-// 3: v:=ENOPAR;//    = 3, // параметр не найден.
-// 4: v:=EPERM;//     = 4, // нарушение прав доступа.
-// 5: v:=EACCESS;//   = 5, // ошибка чтения (в том числе при несовпадении CRC) и записи параметра (параметр только для чтения, область данных хранения параметра защищена от записи).
-// 6: v:=ERANGE;//    = 6, // выход параметра за границу диапазона
-// 7: v:=ENOENT;//    = 7, // файл не найден
-// 8: v:=ENOMEM;//    = 8, // нехватает памяти.
-// 9: v:=EBADF;//     = 9, // недопустимый идентификатор файла или идентификатор не ссылается на открытый файл.
-// 10: v:=ENOSPC//    = 10, // отсутствует место на физическом носителе.
+// 0: v:=EZERO;//     = 0, // СѓСЃРїРµС€РЅРѕРµ Р·Р°РІРµСЂС€РµРЅРёРµ.
+// 1: v:=ENOCMD;//    = 1, // РєРѕРјР°РЅРґР° РЅРµ РЅР°Р№РґРµРЅР°.
+// 2: v:=EINVALCMD;// = 2, // РЅРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ РєРѕРјР°РЅРґС‹.
+// 3: v:=ENOPAR;//    = 3, // РїР°СЂР°РјРµС‚СЂ РЅРµ РЅР°Р№РґРµРЅ.
+// 4: v:=EPERM;//     = 4, // РЅР°СЂСѓС€РµРЅРёРµ РїСЂР°РІ РґРѕСЃС‚СѓРїР°.
+// 5: v:=EACCESS;//   = 5, // РѕС€РёР±РєР° С‡С‚РµРЅРёСЏ (РІ С‚РѕРј С‡РёСЃР»Рµ РїСЂРё РЅРµСЃРѕРІРїР°РґРµРЅРёРё CRC) Рё Р·Р°РїРёСЃРё РїР°СЂР°РјРµС‚СЂР° (РїР°СЂР°РјРµС‚СЂ С‚РѕР»СЊРєРѕ РґР»СЏ С‡С‚РµРЅРёСЏ, РѕР±Р»Р°СЃС‚СЊ РґР°РЅРЅС‹С… С…СЂР°РЅРµРЅРёСЏ РїР°СЂР°РјРµС‚СЂР° Р·Р°С‰РёС‰РµРЅР° РѕС‚ Р·Р°РїРёСЃРё).
+// 6: v:=ERANGE;//    = 6, // РІС‹С…РѕРґ РїР°СЂР°РјРµС‚СЂР° Р·Р° РіСЂР°РЅРёС†Сѓ РґРёР°РїР°Р·РѕРЅР°
+// 7: v:=ENOENT;//    = 7, // С„Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ
+// 8: v:=ENOMEM;//    = 8, // РЅРµС…РІР°С‚Р°РµС‚ РїР°РјСЏС‚Рё.
+// 9: v:=EBADF;//     = 9, // РЅРµРґРѕРїСѓСЃС‚РёРјС‹Р№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ С„Р°Р№Р»Р° РёР»Рё РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РЅРµ СЃСЃС‹Р»Р°РµС‚СЃСЏ РЅР° РѕС‚РєСЂС‹С‚С‹Р№ С„Р°Р№Р».
+// 10: v:=ENOSPC//    = 10, // РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РјРµСЃС‚Рѕ РЅР° С„РёР·РёС‡РµСЃРєРѕРј РЅРѕСЃРёС‚РµР»Рµ.
 // else
 // v:=EUNDEF;
 // end;
@@ -1301,7 +1301,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           begin
                             result := EUNDEFTYPE;
                             AddList('UAI',
-                              'неподдерживаемый тип прибора ->' + string(str));
+                              'РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С‚РёРї РїСЂРёР±РѕСЂР° ->' + string(str));
                           end
                         else
                           begin
@@ -1312,7 +1312,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           end;
                       except
                         AddList('UAI',
-                          'ошибка преобразования Str->Int' + string(str));
+                          'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ Str->Int' + string(str));
                         result := EEXCEPT;
                       end;
                     end;
@@ -1333,7 +1333,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                         val.n := 4;
                       except
                         AddList('UAI',
-                          'ошибка преобразования Str->Float' + '"' + string
+                          'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ Str->Float' + '"' + string
                               (str) + '"');
                         result := EEXCEPT;
                       end;
@@ -1343,7 +1343,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
           2:
             begin
               buffTx := ';2;' + buffTx + ';';
-              // установить адресс на доступ в еепроме
+              // СѓСЃС‚Р°РЅРѕРІРёС‚СЊ Р°РґСЂРµСЃСЃ РЅР° РґРѕСЃС‚СѓРї РІ РµРµРїСЂРѕРјРµ
               result := Transaction(buffTx, 800);
               if (result = OK) then
                 begin
@@ -1351,7 +1351,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                   BC.CRet := ECodReturn(@str[1]);
                   if (BC.CRet <> EZERO) then
                     begin
-                      AddList('UAI', ' Код ошибки=' + string(str));
+                      AddList('UAI', ' РљРѕРґ РѕС€РёР±РєРё=' + string(str));
                       result := EFAIL;
                     end
                   else
@@ -1362,14 +1362,14 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
           8:
             begin
               buffTx := ';8;' + buffTx + ';';
-              // считать из еепрома buffTx байт.
+              // СЃС‡РёС‚Р°С‚СЊ РёР· РµРµРїСЂРѕРјР° buffTx Р±Р°Р№С‚.
               result := Transaction(buffTx, 800);
               if (result = OK) then
                 begin
                   str := copy(buffRx, semi[0] + 1, semi[1] - semi[0] - 1);
                   if str[1] = '$' then
                     begin
-                      AddList('UAI', ' Код ошибки=' + str[2]);
+                      AddList('UAI', ' РљРѕРґ РѕС€РёР±РєРё=' + str[2]);
                       result := EFAIL;
                     end
                   else
@@ -1383,7 +1383,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
             end;
           199:
             begin
-              buffTx := ';199;A5;'; // ресет!
+              buffTx := ';199;A5;'; // СЂРµСЃРµС‚!
               result := Transaction(buffTx, 800);
               if (result = OK) then
                 begin
@@ -1395,7 +1395,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                         (PSingle(@Val.arr))^:=SnglVal;
                         Val.n:=4;
                         except
-                        AddList('UAI','ошибка преобразования Str->Float'+'"'+str+'"');
+                        AddList('UAI','РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ Str->Float'+'"'+str+'"');
                         result:=EEXCEPT;
                         end; }
                     end;
@@ -1414,13 +1414,13 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           result := OK
                         else
                           begin
-                            AddList('UAI', 'неподдерживаемый протокол');
+                            AddList('UAI', 'РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ РїСЂРѕС‚РѕРєРѕР»');
                             result := EPROTOCOL;
                           end;
 
                       except
                         AddList('UAI',
-                          'ошибка преобразования Str->Int' + string(str));
+                          'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ Str->Int' + string(str));
                         result := EEXCEPT;
                       end;
                     end;
@@ -1439,7 +1439,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                       if BC.CRet = EFALSE then
                         begin
                           AddList('UAI',
-                            'ошибка преобразования строки:' + string(str));
+                            'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:' + string(str));
                           result := EEXCEPT;
                         end
                       else
@@ -1447,7 +1447,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (BC.CRet <> EZERO) then
                             begin
                               AddList('UAI',
-                                'Невозможно установ. новый адрес. Код ошибки='
+                                'РќРµРІРѕР·РјРѕР¶РЅРѕ СѓСЃС‚Р°РЅРѕРІ. РЅРѕРІС‹Р№ Р°РґСЂРµСЃ. РљРѕРґ РѕС€РёР±РєРё='
                                     + string(str));
                               result := EFAIL;
                             end;
@@ -1468,7 +1468,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                       if BC.CRet = EFALSE then
                         begin
                           AddList('UAI',
-                            'ошибка преобразования строки:' + string(str));
+                            'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:' + string(str));
                           result := EEXCEPT;
                         end
                       else
@@ -1476,7 +1476,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (BC.CRet <> EZERO) then
                             begin
                               AddList('UAI',
-                                'Невозможно установ. новую скороть. Код ошибки='
+                                'РќРµРІРѕР·РјРѕР¶РЅРѕ СѓСЃС‚Р°РЅРѕРІ. РЅРѕРІСѓСЋ СЃРєРѕСЂРѕС‚СЊ. РљРѕРґ РѕС€РёР±РєРё='
                                     + string(str));
                               result := EFAIL;
                             end;
@@ -1498,12 +1498,12 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                             strToInt(string(str))) <> True) then
                           begin
                             AddList('UAI',
-                              'невозможное значение:' + string(str));
+                              'РЅРµРІРѕР·РјРѕР¶РЅРѕРµ Р·РЅР°С‡РµРЅРёРµ:' + string(str));
                             result := EIMPOSSIBLE;
                           end;
                       except
                         AddList('UAI',
-                          'ошибка преобразования строки:' + string(str));
+                          'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:' + string(str));
                         result := EEXCEPT;
                       end;
                     end;
@@ -1523,7 +1523,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                         begin
                           if (StrToHex_M(str, val.arr) = False) then
                             begin
-                              AddList('UAI', 'ошибка преобразования строки');
+                              AddList('UAI', 'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё');
                               result := EEXCEPT;
                             end
                           else
@@ -1532,7 +1532,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                       else
                         begin
                           AddList('UAI',
-                            'Невозможно считать буфер возврата' + string(str));
+                            'РќРµРІРѕР·РјРѕР¶РЅРѕ СЃС‡РёС‚Р°С‚СЊ Р±СѓС„РµСЂ РІРѕР·РІСЂР°С‚Р°' + string(str));
                           result := EFAIL;
                         end;
                     end;
@@ -1552,7 +1552,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                         begin
                           if (StrToHex_M(str, val.arr) = False) then
                             begin
-                              AddList('UAI', 'ошибка преобразования строки');
+                              AddList('UAI', 'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё');
                               result := EEXCEPT;
                             end
                           else
@@ -1564,7 +1564,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                         begin
                           if (BC.CRet <> EZERO) then
                             begin
-                              AddList('UAI', 'код возврата' + string(str));
+                              AddList('UAI', 'РєРѕРґ РІРѕР·РІСЂР°С‚Р°' + string(str));
                               result := EFAIL;
                             end;
                         end;
@@ -1583,14 +1583,14 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                       BC.CRet := ECodReturn(@str[1]);
                       if BC.CRet = EFALSE then
                         begin
-                          AddList('UAI', 'невозможное значение:' + string(str));
+                          AddList('UAI', 'РЅРµРІРѕР·РјРѕР¶РЅРѕРµ Р·РЅР°С‡РµРЅРёРµ:' + string(str));
                           result := EIMPOSSIBLE;
                         end
                       else
                         begin
                           if (BC.CRet <> EZERO) then
                             begin
-                              AddList('UAI', 'код возврата' + string(str));
+                              AddList('UAI', 'РєРѕРґ РІРѕР·РІСЂР°С‚Р°' + string(str));
                               result := EFAIL;
                             end;
                         end;
@@ -1610,7 +1610,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                       if BC.CRet = EFALSE then
                         begin
                           AddList('UAI',
-                            'ошибка преобразования строки:' + string(str));
+                            'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:' + string(str));
                           result := EEXCEPT;
                         end
                       else
@@ -1618,7 +1618,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (BC.CRet <> EZERO) then
                             begin
                               AddList('UAI',
-                                'Невозможно открыть файл. Код ошибки=' + string
+                                'РќРµРІРѕР·РјРѕР¶РЅРѕ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р». РљРѕРґ РѕС€РёР±РєРё=' + string
                                     (str));
                               result := EFAIL;
                             end;
@@ -1639,7 +1639,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                       if BC.CRet = EFALSE then
                         begin
                           AddList('UAI',
-                            'ошибка преобразования строки:' + string(str));
+                            'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:' + string(str));
                           result := EEXCEPT;
                         end
                       else
@@ -1647,7 +1647,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (BC.CRet <> EZERO) then
                             begin
                               AddList('UAI',
-                                'Невозможно установит адрес в файле. Код ошибки='
+                                'РќРµРІРѕР·РјРѕР¶РЅРѕ СѓСЃС‚Р°РЅРѕРІРёС‚ Р°РґСЂРµСЃ РІ С„Р°Р№Р»Рµ. РљРѕРґ РѕС€РёР±РєРё='
                                     + string(str));
                               result := EFAIL;
                             end;
@@ -1669,7 +1669,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                         begin
                           if (StrToHex_M(str, val.arr) = False) then
                             begin
-                              AddList('UAI', 'ошибка преобразования строки:');
+                              AddList('UAI', 'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:');
                               result := EEXCEPT;
                             end
                           else
@@ -1680,7 +1680,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (BC.CRet <> EZERO) then
                             begin
                               AddList('UAI',
-                                'Невозможно считать данные из файла. Код ошибки='
+                                'РќРµРІРѕР·РјРѕР¶РЅРѕ СЃС‡РёС‚Р°С‚СЊ РґР°РЅРЅС‹Рµ РёР· С„Р°Р№Р»Р°. РљРѕРґ РѕС€РёР±РєРё='
                                     + string(str));
                               result := EFAIL;
                             end;
@@ -1701,7 +1701,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                       if BC.CRet = EFALSE then
                         begin
                           AddList('UAI',
-                            'ошибка преобразования строки:' + string(str));
+                            'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:' + string(str));
                           result := EEXCEPT;
                         end
                       else
@@ -1709,7 +1709,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (BC.CRet <> EZERO) then
                             begin
                               AddList('UAI',
-                                'Невозможно записать данные в файл. Код ошибки='
+                                'РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РїРёСЃР°С‚СЊ РґР°РЅРЅС‹Рµ РІ С„Р°Р№Р». РљРѕРґ РѕС€РёР±РєРё='
                                     + string(str));
                               result := EFAIL;
                             end;
@@ -1730,7 +1730,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                       if BC.CRet = EFALSE then
                         begin
                           AddList('UAI',
-                            'ошибка преобразования строки:' + string(str));
+                            'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:' + string(str));
                           result := EEXCEPT;
                         end
                       else
@@ -1738,7 +1738,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (BC.CRet <> EZERO) then
                             begin
                               AddList('UAI',
-                                'Невозможно закрыть файл. Код ошибки=' + string
+                                'РќРµРІРѕР·РјРѕР¶РЅРѕ Р·Р°РєСЂС‹С‚СЊ С„Р°Р№Р». РљРѕРґ РѕС€РёР±РєРё=' + string
                                     (str));
                               result := EFAIL;
                             end;
@@ -1761,7 +1761,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (tryStrToInt(string(str), LIntVal) = False) then
                             begin
                               AddList('UAI',
-                                'ошибка преобразования строки:' + '"' + string
+                                'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:' + '"' + string
                                     (str) + '"');
                               result := EEXCEPT;
                             end
@@ -1777,7 +1777,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (BC.CRet <> EZERO) then
                             begin
                               AddList('UAI',
-                                'Неудалось определить позицию в файле. Код ошибки='
+                                'РќРµСѓРґР°Р»РѕСЃСЊ РѕРїСЂРµРґРµР»РёС‚СЊ РїРѕР·РёС†РёСЋ РІ С„Р°Р№Р»Рµ. РљРѕРґ РѕС€РёР±РєРё='
                                     + string(str));
                               result := EFAIL;
                             end;
@@ -1798,7 +1798,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                       if BC.CRet = EFALSE then
                         begin
                           AddList('UAI',
-                            'ошибка преобразования строки:' + string(str));
+                            'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:' + string(str));
                           result := EEXCEPT;
                         end
                       else
@@ -1806,7 +1806,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (BC.CRet <> EZERO) then
                             begin
                               AddList('UAI',
-                                'Невозможно установить атрибут файла. Код ошибки='
+                                'РќРµРІРѕР·РјРѕР¶РЅРѕ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ Р°С‚СЂРёР±СѓС‚ С„Р°Р№Р»Р°. РљРѕРґ РѕС€РёР±РєРё='
                                     + string(str));
                               result := EFAIL;
                             end;
@@ -1828,7 +1828,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                       if BC.CRet = EFALSE then
                         begin
                           AddList('UAI',
-                            'ошибка преобразования строки:' + string(str));
+                            'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃС‚СЂРѕРєРё:' + string(str));
                           result := EEXCEPT;
                         end
                       else
@@ -1836,7 +1836,7 @@ function TLowLvlUAI.UAI(cmd: BYTE; buffTx: AnsiString): EnErr;
                           if (BC.CRet <> EZERO) then
                             begin
                               AddList('UAI',
-                                'Невозможно стереть файл. Код ошибки=' + string
+                                'РќРµРІРѕР·РјРѕР¶РЅРѕ СЃС‚РµСЂРµС‚СЊ С„Р°Р№Р». РљРѕРґ РѕС€РёР±РєРё=' + string
                                     (str));
                               result := EFAIL;
                             end;
@@ -1966,7 +1966,7 @@ function TLowLvlUAI.RdPar(id: typeID; var len: BYTE): Boolean;
 
     if Err = OK then
       begin
-        if BC.CRet = EFALSE then // если второй параметр не код возврата возврата значит сразу пришли данные
+        if BC.CRet = EFALSE then // РµСЃР»Рё РІС‚РѕСЂРѕР№ РїР°СЂР°РјРµС‚СЂ РЅРµ РєРѕРґ РІРѕР·РІСЂР°С‚Р° РІРѕР·РІСЂР°С‚Р° Р·РЅР°С‡РёС‚ СЃСЂР°Р·Сѓ РїСЂРёС€Р»Рё РґР°РЅРЅС‹Рµ
           begin
             result := True;
             exit;
@@ -1982,7 +1982,7 @@ function TLowLvlUAI.RdPar(id: typeID; var len: BYTE): Boolean;
         repeat
           sleep(20);
           Err := UAI(35, '');
-          if Err = OK then // читаем регистр статуса
+          if Err = OK then // С‡РёС‚Р°РµРј СЂРµРіРёСЃС‚СЂ СЃС‚Р°С‚СѓСЃР°
             begin
               case BC.Stat of
                 Success:
@@ -2069,7 +2069,7 @@ function TLowLvlUAI.WrPar(id: typeID; pDat: PByte; var len: BYTE): Boolean;
             repeat
               sleep(20);
               Err := UAI(35, '');
-              if Err = OK then // читаем регистр статуса
+              if Err = OK then // С‡РёС‚Р°РµРј СЂРµРіРёСЃС‚СЂ СЃС‚Р°С‚СѓСЃР°
                 begin
                   case BC.Stat of
                     Success:
@@ -2136,7 +2136,7 @@ function TLowLvlUAI.OpenFile(FileName: BYTE; FLAG, mode: BYTE): Boolean;
     Err := UAI(40, buff);
     if Err = OK then
       begin
-        if BC.CRet = EFALSE then // если второй параметр не код возврата возврата значит сразу пришли данные
+        if BC.CRet = EFALSE then // РµСЃР»Рё РІС‚РѕСЂРѕР№ РїР°СЂР°РјРµС‚СЂ РЅРµ РєРѕРґ РІРѕР·РІСЂР°С‚Р° РІРѕР·РІСЂР°С‚Р° Р·РЅР°С‡РёС‚ СЃСЂР°Р·Сѓ РїСЂРёС€Р»Рё РґР°РЅРЅС‹Рµ
           if BC.CRet <> EZERO then //
             begin
               result := False;
@@ -2167,7 +2167,7 @@ function TLowLvlUAI.CloseFile(FileName: BYTE): Boolean;
     Err := UAI(44, IntToAnsi(FileName));
     if Err = OK then
       begin
-        if BC.CRet = EFALSE then // если второй параметр не код возврата возврата значит сразу пришли данные
+        if BC.CRet = EFALSE then // РµСЃР»Рё РІС‚РѕСЂРѕР№ РїР°СЂР°РјРµС‚СЂ РЅРµ РєРѕРґ РІРѕР·РІСЂР°С‚Р° РІРѕР·РІСЂР°С‚Р° Р·РЅР°С‡РёС‚ СЃСЂР°Р·Сѓ РїСЂРёС€Р»Рё РґР°РЅРЅС‹Рµ
           if BC.CRet <> EZERO then //
             begin
               result := False;
@@ -2188,7 +2188,7 @@ function TLowLvlUAI.SeekFile(FileName: BYTE; offset: dword;
           + ';' + IntToAnsi(origin));
     if Err = OK then
       begin
-        if BC.CRet = EFALSE then // если второй параметр не код возврата возврата значит сразу пришли данные
+        if BC.CRet = EFALSE then // РµСЃР»Рё РІС‚РѕСЂРѕР№ РїР°СЂР°РјРµС‚СЂ РЅРµ РєРѕРґ РІРѕР·РІСЂР°С‚Р° РІРѕР·РІСЂР°С‚Р° Р·РЅР°С‡РёС‚ СЃСЂР°Р·Сѓ РїСЂРёС€Р»Рё РґР°РЅРЅС‹Рµ
           if BC.CRet <> EZERO then //
             begin
               result := False;
@@ -2245,7 +2245,7 @@ function TLowLvlUAI.TellFile(FileName: BYTE): Boolean;
     Err := UAI(45, IntToAnsi(FileName));
     if Err = OK then
       begin
-        if BC.CRet = EFALSE then // если второй параметр не код возврата возврата значит сразу пришли данные
+        if BC.CRet = EFALSE then // РµСЃР»Рё РІС‚РѕСЂРѕР№ РїР°СЂР°РјРµС‚СЂ РЅРµ РєРѕРґ РІРѕР·РІСЂР°С‚Р° РІРѕР·РІСЂР°С‚Р° Р·РЅР°С‡РёС‚ СЃСЂР°Р·Сѓ РїСЂРёС€Р»Рё РґР°РЅРЅС‹Рµ
           if BC.CRet <> EZERO then //
             begin
               result := False;
@@ -2289,7 +2289,7 @@ function TLowLvlUAI.RdFile(FileName: BYTE; var len: BYTE): Boolean;
               repeat
                 sleep(20);
                 Err := UAI(35, '');
-                if Err = OK then // читаем регистр статуса
+                if Err = OK then // С‡РёС‚Р°РµРј СЂРµРіРёСЃС‚СЂ СЃС‚Р°С‚СѓСЃР°
                   begin
                     case BC.Stat of
                       Success:
@@ -2374,7 +2374,7 @@ function TLowLvlUAI.WrFile(FileName: BYTE; pDat: pointer;
             repeat
               sleep(20);
               Err := UAI(35, '');
-              if Err = OK then // читаем регистр статуса
+              if Err = OK then // С‡РёС‚Р°РµРј СЂРµРіРёСЃС‚СЂ СЃС‚Р°С‚СѓСЃР°
                 begin
                   case BC.Stat of
                     Success:
@@ -2421,23 +2421,23 @@ function TLowLvlUAI.getStrErr: string;
   begin
     case Err of
       OK:
-        getStrErr := 'успешное завершение';
+        getStrErr := 'СѓСЃРїРµС€РЅРѕРµ Р·Р°РІРµСЂС€РµРЅРёРµ';
       EBUSY:
-        getStrErr := 'ком порт занят';
+        getStrErr := 'РєРѕРј РїРѕСЂС‚ Р·Р°РЅСЏС‚';
       EUNDEFTYPE:
-        getStrErr := 'неподдерживаемый тип прибора';
+        getStrErr := 'РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ С‚РёРї РїСЂРёР±РѕСЂР°';
       EIMPOSSIBLE:
-        getStrErr := 'невозможное поле';
+        getStrErr := 'РЅРµРІРѕР·РјРѕР¶РЅРѕРµ РїРѕР»Рµ';
       EEXCEPT:
-        getStrErr := 'произола ошибка преобразования';
+        getStrErr := 'РїСЂРѕРёР·РѕР»Р° РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ';
       EPROTOCOL:
-        getStrErr := 'неподдерживаемый протокол';
+        getStrErr := 'РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ РїСЂРѕС‚РѕРєРѕР»';
       EFAIL:
-        getStrErr := 'завершение операции не привело к успеху';
+        getStrErr := 'Р·Р°РІРµСЂС€РµРЅРёРµ РѕРїРµСЂР°С†РёРё РЅРµ РїСЂРёРІРµР»Рѕ Рє СѓСЃРїРµС…Сѓ';
       EDISASSEMBLE:
-        getStrErr := 'ошибка преобразования';
+        getStrErr := 'РѕС€РёР±РєР° РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ';
       ETOT:
-        getStrErr := 'нет ответа';
+        getStrErr := 'РЅРµС‚ РѕС‚РІРµС‚Р°';
     end;
   end;
 
@@ -2445,27 +2445,27 @@ function TLowLvlUAI.getStrErrUAI: string;
   begin
     case BC.CRet of
       EZERO:
-        getStrErrUAI := '$0 успешное завершение';
+        getStrErrUAI := '$0 СѓСЃРїРµС€РЅРѕРµ Р·Р°РІРµСЂС€РµРЅРёРµ';
       ENOCMD:
-        getStrErrUAI := '$1 команда не найдена';
+        getStrErrUAI := '$1 РєРѕРјР°РЅРґР° РЅРµ РЅР°Р№РґРµРЅР°';
       EINVALCMD:
-        getStrErrUAI := '$2 неверный формат команды';
+        getStrErrUAI := '$2 РЅРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ РєРѕРјР°РЅРґС‹';
       ENOPAR:
-        getStrErrUAI := '$3 параметр не найден';
+        getStrErrUAI := '$3 РїР°СЂР°РјРµС‚СЂ РЅРµ РЅР°Р№РґРµРЅ';
       EPERM:
-        getStrErrUAI := '$4 нарушение прав доступа';
+        getStrErrUAI := '$4 РЅР°СЂСѓС€РµРЅРёРµ РїСЂР°РІ РґРѕСЃС‚СѓРїР°';
       EACCESS:
-        getStrErrUAI := '$5 ошибка чтения или записи';
+        getStrErrUAI := '$5 РѕС€РёР±РєР° С‡С‚РµРЅРёСЏ РёР»Рё Р·Р°РїРёСЃРё';
       ERANGE:
-        getStrErrUAI := '$6 выход параметра за границу диапазона';
+        getStrErrUAI := '$6 РІС‹С…РѕРґ РїР°СЂР°РјРµС‚СЂР° Р·Р° РіСЂР°РЅРёС†Сѓ РґРёР°РїР°Р·РѕРЅР°';
       ENOENT:
-        getStrErrUAI := '$7 файл не найден';
+        getStrErrUAI := '$7 С„Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ';
       ENOMEM:
-        getStrErrUAI := '$8 нехватает памяти';
+        getStrErrUAI := '$8 РЅРµС…РІР°С‚Р°РµС‚ РїР°РјСЏС‚Рё';
       EBADF:
-        getStrErrUAI := '$9 файловая ошибка';
+        getStrErrUAI := '$9 С„Р°Р№Р»РѕРІР°СЏ РѕС€РёР±РєР°';
       ENOSPC:
-        getStrErrUAI := '$10 отсутствует место на физическом носителе';
+        getStrErrUAI := '$10 РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РјРµСЃС‚Рѕ РЅР° С„РёР·РёС‡РµСЃРєРѕРј РЅРѕСЃРёС‚РµР»Рµ';
     end;
   end;
 
@@ -2529,7 +2529,7 @@ procedure TLowLvlUAI.StrToArrayMass(s: AnsiString);
 // eCC_FAST:begin
 // end;
 // end;
-/// /s:=AnsiChar('я')+'!'+s+IntToStr(CalcCRC16Table(s,length(s)))+#13;
+/// /s:=AnsiChar('СЏ')+'!'+s+IntToStr(CalcCRC16Table(s,length(s)))+#13;
 //
 // result:=s;
 // end;

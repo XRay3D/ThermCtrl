@@ -7,6 +7,7 @@
 #include <array>
 #include <charconv>
 #include <concepts>
+
 enum {
     COMMUTATOR = 16,
     IKSU_2000 = 15,
@@ -15,82 +16,84 @@ enum {
     MAN = 50,
 };
 
-template <typename T>
-constexpr bool false_v = false;
-
 struct Hex {
-    QByteArray hex;
+    const QByteArray hex;
+
     template <typename T>
-    Hex(T&& val)
-        : hex(toHex(val))
-    {
-    }
+    explicit Hex(T&& val) requires requires(T) {
+        std::is_arithmetic_v<T>;
+        std::is_enum_v<T>;
+    } : hex(QByteArray(reinterpret_cast<const char*>(&val), sizeof(std::decay_t<T>)).toHex().toUpper())
+    {}
+
     template <typename T>
-    static QByteArray toHex(T&& val)
-    {
-        using Ty = std::decay_t<T>;
-        //qDebug() << __FUNCTION__ << typeid(Ty).name() << sizeof(Ty);
-        if /*  */ constexpr (std::is_integral_v<Ty> || std::is_enum_v<Ty> || std::is_floating_point_v<Ty>)
-            return QByteArray(reinterpret_cast<const char*>(&val), sizeof(Ty)).toHex().toUpper();
-        else if constexpr (std::is_same_v<Ty, QString>)
-            return val.toLocal8Bit().toHex().toUpper();
-        else if constexpr (std::is_same_v<Ty, QByteArray>)
-            return val.toHex().toUpper();
-        else
-            static_assert(false_v<Ty>, "Unimplemeted conversion");
-    }
+    explicit Hex(T&& val) requires std::is_same_v<T, QString> : hex(val.toLocal8Bit().toHex().toUpper())
+    {}
+
+    template <typename T>
+    explicit Hex(T&& val) requires std::is_same_v<T, QByteArray> : hex(val.toHex().toUpper())
+    {}
 };
 
 struct SkipSemicolon {
 };
 
-struct ByteArray : QByteArray {
-};
-
-template <typename T>
-concept Integral = requires(T) { std::is_integral_v<T>; };
-
 class ElemerASCII {
     static inline QByteArray parcel;
 
+    // integral
     template <typename T>
-    void func(T&& arg) requires std::is_integral_v<std::decay_t<T>>
-    {
+    void func(T&& arg) requires std::is_integral_v<std::decay_t<T>> {
         std::array<char, 16> str { 0 };
-        if (auto [ptr, ec] = std::to_chars(str.data(), str.data() + str.size(), static_cast<int64_t>(arg)); !(ec == std::errc {}))
+        auto [ptr, ec] = std::to_chars(str.data(), str.data() + str.size(), static_cast<int64_t>(arg));
+        if (!(ec == std::errc {}))
             qDebug() << static_cast<int>(ec);
         parcel.append(str.data()).append(';');
     };
 
+    // floating point
     template <typename T>
-    void func(T&& arg) requires std::is_floating_point_v<std::decay_t<T>>
-    {
+    void func(T&& arg) requires std::is_floating_point_v<std::decay_t<T>> {
         std::array<char, 16> str { 0 };
-        if (auto [ptr, ec] = std::to_chars(str.data(), str.data() + str.size(), arg, std::chars_format::fixed, 5); !(ec == std::errc {}))
+        auto [ptr, ec] = std::to_chars(str.data(), str.data() + str.size(), arg, std::chars_format::fixed, 5);
+        if (!(ec == std::errc {}))
             qDebug() << static_cast<int>(ec);
         parcel.append(str.data()).append(';');
     };
 
+    // enum
     template <typename T>
-    void func(T&& arg) requires std::is_enum_v<std::decay_t<T>>
-    {
+    void func(T&& arg) requires std::is_enum_v<std::decay_t<T>> {
         std::array<char, 16> str { 0 };
-        if (auto [ptr, ec] = std::to_chars(str.data(), str.data() + str.size(), static_cast<int>(arg)); !(ec == std::errc {}))
+        auto [ptr, ec] = std::to_chars(str.data(), str.data() + str.size(), static_cast<int>(arg));
+        if (!(ec == std::errc {}))
             qDebug() << static_cast<int>(ec);
         parcel.append(str.data()).append(';');
     };
 
+    // Hex
     template <typename T>
-    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, Hex> { parcel.append(arg.hex).append(';'); };
+    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, Hex> {
+        parcel.append(arg.hex).append(';');
+    };
 
+    // QByteArray
     template <typename T>
-    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, QByteArray> { parcel.append(arg).append(';'); };
+    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, QByteArray> {
+        parcel.append(arg).append(';');
+    };
 
+    // QString
     template <typename T>
-    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, QString> { parcel.append(arg.toLocal8Bit()).append(';'); };
+    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, QString> {
+        parcel.append(arg.toLocal8Bit()).append(';');
+    };
 
+    // SkipSemicolon
     template <typename T>
-    void func(T&& /*arg*/) requires std::is_same_v<std::decay_t<T>, SkipSemicolon> { parcel.resize(parcel.size() - 1); };
+    void func(T&& /*arg*/) requires std::is_same_v<std::decay_t<T>, SkipSemicolon> {
+        parcel.resize(parcel.size() - 1);
+    };
 
     static constexpr uint8_t tableCrc16Lo[] {
         0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40,
@@ -129,66 +132,37 @@ class ElemerASCII {
         0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42, 0x43, 0x83, 0x41, 0x81, 0x80, 0x40
 
     };
+
     static inline const QByteArray success_ { "$0" };
 
 public:
-    bool success()
-    {
+    bool success() {
         m_lastRetCode = m_data.value(1);
         return m_lastRetCode == success_;
     };
 
-    //bool getSuccess(QByteArray data)
-    //{
-    //    qDebug() << data;
-    //    if (data.isEmpty()) {
-    //        return false;
-    //    }
-    //    int i = 0;
-    //    while (data[0] != '!' && data.size()) {
-    //        data = data.remove(0, 1);
-    //    }
-    //    while (data[data.size() - 1] != '\r' && data.size()) {
-    //        data = data.remove(data.size() - 1, 1);
-    //    }
-    //    data = data.remove(data.size() - 1, 1);
-    //    QList<QByteArray> list = data.split(';');
-    //    data.clear();
-    //    while (i < list.count() - 1) {
-    //        data.append(list[i++]).append(';');
-    //    }
-    //    if (calcCrc(data).toInt() == list.last().toInt() && list.count() > 2) {
-    //        if (list.at(1) == "$0") {
-    //            return true;
-    //        }
-    //    }
-    //    return false;
-    //}
-
-    QByteArray calcCrc(const QByteArray& parcel)
-    {
+    QByteArray calcCrc(const QByteArray& parcel) {
         // (X^16 + X^15 + X^2 + 1).
         uint16_t crcLo = 0xFF, crcHi = 0xFF;
-        uint8_t index;
         for (auto byteIt = parcel.begin() + 1; byteIt != parcel.end(); ++byteIt) {
-            index = crcLo ^ *byteIt;
+            uint8_t index = crcLo ^ *byteIt;
             crcLo = crcHi ^ tableCrc16Lo[index];
             crcHi = tableCrc16Hi[index];
         }
         return QByteArray::number(crcHi << 8 | crcLo);
     }
 
-    bool checkParcel()
-    {
+    bool checkParcel() {
         if (int index = m_parcel.indexOf('!'); index > 0)
             m_parcel.remove(0, index);
 
         if (int index = m_parcel.lastIndexOf('\r'); index > 0)
             m_parcel.resize(index);
 
-        if (int index = m_parcel.lastIndexOf(';') + 1; index > 0 && calcCrc(m_parcel.left(index)).toUInt() == m_parcel.right(m_parcel.length() - index).toUInt()) {
+        if (int index = m_parcel.lastIndexOf(';') + 1;
+            index > 0 && calcCrc(m_parcel.left(index)).toUInt() == m_parcel.right(m_parcel.length() - index).toUInt()) {
             m_data = m_parcel.split(';');
-            m_data.first().remove(0, 1);
+            m_data.front().remove(0, 1);
             return true;
         }
         m_data.clear();
@@ -196,18 +170,21 @@ public:
     }
 
     template <typename... Ts>
-    QByteArray createParcel(Ts&&... args)
-    {
+    QByteArray createParcel(Ts&&... args) {
         parcel.clear();
         parcel.append(':');
         (func(args), ...);
         parcel.append(calcCrc(parcel)).append('\r');
-        return QByteArray(1, 0xFF) + parcel;
+        return QByteArray(1, -1 /*0xFF*/) + parcel;
     }
 
     template <typename T>
-        auto fromHex(int index, bool* ok = nullptr) requires std::is_pod_v<T> || std::is_trivial_v<T>
-    {
+    auto fromHex(int index, bool* ok = nullptr) requires requires(T) {
+        std::is_arithmetic_v<T>;
+        std::is_enum_v<T>;
+        std::is_pod_v<T>;
+        std::is_trivial_v<T>;
+    } {
         T t {};
         auto data { QByteArray::fromHex(m_data.value(index)) };
         if (data.size() == sizeof(T)) {

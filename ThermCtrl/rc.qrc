@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/edit-find.svg</file>
+        <file>res/edit-find-replace.svg</file>
+        <file>res/media-playback-pause.svg</file>
+        <file>res/media-playback-start.svg</file>
+        <file>res/media-playback-stop.svg</file>
+        <file>res/window-close.svg</file>
+        <file>res/media-record.svg</file>
+    </qresource>
+</RCC>

@@ -3,7 +3,28 @@
 #include <QDebug>
 #include <QElapsedTimer>
 
+//#define AlwaysOpen //Если необходимо держать открытым тогда не использовать PortOener
+
 QElapsedTimer t;
+
+class PortOener { // RAII
+    Irt5502* const cpIrt;
+
+public:
+    explicit PortOener(Irt5502* t)
+        : cpIrt(t)
+    {
+        emit cpIrt->open(QIODevice::ReadWrite);
+        cpIrt->m_connected = cpIrt->m_semaphore.tryAcquire(1, 1000); // ждём открытия порта
+    }
+    ~PortOener()
+    {
+        if (cpIrt->m_connected) {
+            emit cpIrt->close();
+            cpIrt->m_semaphore.tryAcquire(1, 1000); // ждём закрытия порта
+        }
+    }
+};
 
 Irt5502::Irt5502(QObject* parent)
     : QObject(parent)
@@ -26,37 +47,43 @@ Irt5502::~Irt5502()
 
 bool Irt5502::ping(const QString& portName, int baud, int addr)
 {
-    qDebug(__FUNCTION__);
     QMutexLocker locker(&m_mutex);
     m_connected = true;
     m_semaphore.acquire(m_semaphore.available());
     do {
         emit close();
-        if (!m_semaphore.tryAcquire(1, 1000))
+        if (!m_semaphore.tryAcquire(1, 1000)) // ждём закрытия порта
             break;
 
         if (!portName.isEmpty())
             m_port->setPortName(portName);
         if (baud != 0)
             m_port->setBaudRate(baud);
-
+#ifdef AlwaysOpen
         emit open(QIODevice::ReadWrite);
         if (!m_semaphore.tryAcquire(1, 1000) && m_port->isOpen())
             break;
-
+#endif
         if (getDev(addr) != IRT5502) {
+#ifdef AlwaysOpen
             emit close();
-            m_connected = false;
+#endif
+            break;
         }
+        return m_connected;
     } while (0);
-    return m_connected;
+    return m_connected = false;
 }
 
 int Irt5502::getDev(int addr)
 {
     devType = 0;
+#ifndef AlwaysOpen
+    PortOener po(this);
+#endif
     if (m_connected) {
-        emit write(createParcel(addr, 0));
+        int& a = addr;
+        emit write(createParcel(a, 0));
         if (wait()) {
             address = addr;
             devType = m_data[1].toInt();
@@ -68,9 +95,13 @@ int Irt5502::getDev(int addr)
 bool Irt5502::setSetPoint(float val)
 {
     QMutexLocker locker(&m_mutex);
+#ifndef AlwaysOpen
+    PortOener po(this);
+#endif
     if (m_connected) {
-        constexpr uint16_t hex { 0x66DA };
-        emit write(createParcel(address, Cmd::WritePar, Hex(true), SkipSemicolon {}, Hex(hex), Hex(val)));
+        emit write(createParcel(address, Cmd::WritePar,
+            Hex(Write), SkipSemicolon {}, Hex(Par::SetPoint),
+            Hex(val)));
         if (wait() && success())
             return true;
     }
@@ -80,13 +111,15 @@ bool Irt5502::setSetPoint(float val)
 bool Irt5502::getMasuredValue()
 {
     QMutexLocker locker(&m_mutex);
+#ifndef AlwaysOpen
+    PortOener po(this);
+#endif
     if (m_connected) {
-        constexpr uint16_t hex { 0xFF00 };
-        emit write(createParcel(address, Cmd::ReadPar, Hex(false), SkipSemicolon {}, Hex(hex)));
+        emit write(createParcel(address, Cmd::ReadPar,
+            Hex(Read), SkipSemicolon {}, Hex(Par::All)));
         if (wait()) {
-            bool ok {};
-            auto val = fromHex<AllChVal>(1, &ok);
-            if (ok)
+            bool ok;
+            if (auto val = fromHex<AllChVal>(1, &ok); ok)
                 emit measuredValue(val.ch1val);
             return true;
         }
@@ -97,9 +130,13 @@ bool Irt5502::getMasuredValue()
 bool Irt5502::setEnable(bool run)
 {
     QMutexLocker locker(&m_mutex);
+#ifndef AlwaysOpen
+    PortOener po(this);
+#endif
     if (m_connected) {
-        constexpr uint16_t hex { 0x65DA };
-        emit write(createParcel(address, Cmd::WritePar, Hex(true), SkipSemicolon {}, Hex(hex), Hex(run)));
+        emit write(createParcel(address, Cmd::WritePar,
+            Hex(Write), SkipSemicolon {}, Hex(Par::Enable),
+            Hex(run)));
         if (wait() && success())
             return true;
     }
@@ -126,11 +163,11 @@ bool Irt5502::wait(int timeout)
 IrtPort::IrtPort(Irt5502* kds)
     : m_irt(kds)
 {
-    setBaudRate(Baud19200);
+    setBaudRate(Baud9600);
     setParity(NoParity);
     setDataBits(Data8);
     setFlowControl(NoFlowControl);
-    connect(this, &QSerialPort::readyRead, this, &IrtPort::procRead);
+    connect(this, &QSerialPort::readyRead, this, &IrtPort::Read);
 }
 
 void IrtPort::Open(int mode)
@@ -152,12 +189,13 @@ void IrtPort::Write(const QByteArray& data)
     //write(data);
 }
 
-void IrtPort::procRead()
+void IrtPort::Read()
 {
     QMutexLocker locker(&m_mutex);
     m_data.append(readAll());
     if (int index = m_data.indexOf('\r'); ++index > 0) {
         m_irt->m_parcel = m_data.mid(0, index);
+        qDebug() << __FUNCTION__ << m_irt->m_parcel;
         m_data.remove(0, index);
         m_irt->m_semaphore.release();
     }

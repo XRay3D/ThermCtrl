@@ -106,6 +106,10 @@
              <property name="text">
               <string>Поиск</string>
              </property>
+             <property name="icon">
+              <iconset resource="rc.qrc">
+               <normaloff>:/res/edit-find.svg</normaloff>:/res/edit-find.svg</iconset>
+             </property>
             </widget>
            </item>
            <item>
@@ -173,6 +177,10 @@
              <property name="text">
               <string>Старт на уставку</string>
              </property>
+             <property name="icon">
+              <iconset resource="rc.qrc">
+               <normaloff>:/res/media-playback-start.svg</normaloff>:/res/media-playback-start.svg</iconset>
+             </property>
              <property name="checkable">
               <bool>false</bool>
              </property>
@@ -182,6 +190,10 @@
             <widget class="QPushButton" name="pbtnManReadTemp">
              <property name="text">
               <string>Чтение температуры</string>
+             </property>
+             <property name="icon">
+              <iconset resource="rc.qrc">
+               <normaloff>:/res/media-record.svg</normaloff>:/res/media-record.svg</iconset>
              </property>
             </widget>
            </item>
@@ -214,6 +226,10 @@
             <widget class="QPushButton" name="pbtnManStop">
              <property name="text">
               <string>Стоп</string>
+             </property>
+             <property name="icon">
+              <iconset resource="rc.qrc">
+               <normaloff>:/res/media-playback-stop.svg</normaloff>:/res/media-playback-stop.svg</iconset>
              </property>
             </widget>
            </item>
@@ -263,6 +279,10 @@
              <property name="text">
               <string>Старт</string>
              </property>
+             <property name="icon">
+              <iconset resource="rc.qrc">
+               <normaloff>:/res/media-playback-start.svg</normaloff>:/res/media-playback-start.svg</iconset>
+             </property>
              <property name="checkable">
               <bool>true</bool>
              </property>
@@ -310,7 +330,7 @@
      <x>0</x>
      <y>0</y>
      <width>656</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
@@ -328,6 +348,8 @@
    <header>doublespinbox.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="rc.qrc"/>
+ </resources>
  <connections/>
 </ui>

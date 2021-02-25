@@ -66,3 +66,6 @@ DISTFILES += \
 #    ThermCtrl/Time.dfm \
     ThermCtrl/Time.pas \
 #    ThermCtrl/config.txt
+
+RESOURCES += \
+    rc.qrc

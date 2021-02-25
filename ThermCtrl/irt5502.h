@@ -9,11 +9,12 @@ class IrtPort;
 class Irt5502 : public QObject, public CommonInterfaces, public ElemerASCII {
     Q_OBJECT
     friend class IrtPort;
+    friend class PortOener;
 
 public:
     Irt5502(QObject* parent = nullptr);
     ~Irt5502() override;
-    bool ping([[maybe_unused]] const QString& portName = QString(), [[maybe_unused]] int baud = 9600, [[maybe_unused]] int addr = 0) override;
+    bool ping(const QString& portName = QString(), int baud = 9600, int addr = 0) override;
     int getDev(int addr);
 
     bool setSetPoint(float val);
@@ -38,8 +39,8 @@ public:
 #pragma pack(pop)
 
 signals:
-    void open(int mode);
-    void close();
+    void open(int mode) override;
+    void close() override;
     void write(const QByteArray& data);
     void message(const QString&, int = {});
     void measuredValue(double);
@@ -71,7 +72,17 @@ private:
         GetVer = 0XFE,
 
         ResetCpu = 0XFF
+    };
 
+    enum class Par : uint16_t {
+        SetPoint = 0x66DA,
+        All = 0xFF00,
+        Enable = 0x65DA,
+    };
+
+    enum : uint8_t {
+        Read,
+        Write,
     };
 
     bool m_result = false;
@@ -96,7 +107,7 @@ signals:
     void message(const QString&, int = {});
 
 private:
-    void procRead();
+    void Read();
     QByteArray m_data;
     QMutex m_mutex;
 };

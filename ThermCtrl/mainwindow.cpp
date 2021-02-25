@@ -42,6 +42,8 @@ public:
     }
 };
 
+enum { ColumnWidth = 50 };
+
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui { new Ui::MainWindow }
@@ -54,10 +56,6 @@ MainWindow::MainWindow(QWidget* parent)
     irt->moveToThread(&irtThread);
     connect(&irtThread, &QThread::finished, irt, &QObject::deleteLater);
     irtThread.start();
-
-    // connect pointModel
-    connect(ui->sbxPoints, qOverload<int>(&QSpinBox::valueChanged), pointModel, &PointModel::setPointCount);
-    connect(pointModel, &PointModel::message, ui->statusbar, &QStatusBar::showMessage);
 
     // connect irt
     connect(irt, &Irt5502::message, ui->statusbar, &QStatusBar::showMessage);
@@ -76,12 +74,28 @@ MainWindow::MainWindow(QWidget* parent)
 
     // setup tableViewPoints
     ui->tableViewPoints->setModel(pointModel);
-    ui->tableViewPoints->horizontalHeader()->setDefaultSectionSize(50);
-    ui->tableViewPoints->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->tableViewPoints->horizontalHeader()->setDefaultSectionSize(ColumnWidth);
+    ui->tableViewPoints->horizontalHeader()->setMinimumSectionSize(ColumnWidth);
+    ui->tableViewPoints->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableViewPoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->tableViewPoints->setItemDelegate(new MyItemDelegate(ui->tableViewPoints)); // подтюнил для красоты
+    // connect pointModel
+    connect(ui->sbxPoints, qOverload<int>(&QSpinBox::valueChanged), pointModel, &PointModel::setPointCount);
+    connect(ui->sbxPoints, qOverload<int>(&QSpinBox::valueChanged), [this] {
+        QTimer::singleShot(1, [this] { //задержка ожидания обновления модели
+            auto hsbv = ui->tableViewPoints->horizontalScrollBar()->isVisible();
+            ui->tableViewPoints->horizontalHeader()->setSectionResizeMode(hsbv ? QHeaderView::Fixed
+                                                                               : QHeaderView::Stretch);
+        });
+    });
+    connect(pointModel, &PointModel::message, ui->statusbar, &QStatusBar::showMessage);
+
     loadSettings();
     on_pbtnFind_clicked();
+
+    for (auto childs { findChildren<QPushButton*>() }; auto pb : childs) {
+        pb->setIconSize({ 16, 16 });
+    }
 }
 
 MainWindow::~MainWindow()
@@ -169,6 +183,7 @@ void MainWindow::on_pbtnAutoStartStop_clicked(bool checked)
     if (irt->isConnected()) {
         if (timerId)
             killTimer(timerId);
+
         if (checked) {
             ui->chartView->reset();
             delayType = 0;
@@ -184,6 +199,9 @@ void MainWindow::on_pbtnAutoStartStop_clicked(bool checked)
         checked = false;
         finded(false);
     }
+    QIcon icon1(QString::fromUtf8(checked ? ":/res/media-playback-stop.svg"
+                                          : ":/res/media-playback-start.svg"));
+    ui->pbtnAutoStartStop->setIcon(icon1);
     ui->pbtnAutoStartStop->setChecked(checked);
 }
 

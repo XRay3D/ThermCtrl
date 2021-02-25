@@ -4,14 +4,43 @@
 #include "irt5502.h"
 #include "pointmodel.h"
 
+#include <QDateTimeEdit>
 #include <QDebug>
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
+#include <QStyledItemDelegate>
 #include <algorithm>
 #include <ranges>
 
 using PortInfo = QSerialPortInfo;
+
+class MyItemDelegate : public QStyledItemDelegate {
+public:
+    MyItemDelegate(QWidget* parent = nullptr)
+        : QStyledItemDelegate(parent)
+    {
+    }
+
+    // QAbstractItemDelegate interface
+    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& /*option*/, const QModelIndex& index) const override
+    {
+        if (!index.row()) {
+            auto dsbx = new DoubleSpinBox(parent);
+            dsbx->setRange(-999, +999);
+            dsbx->setButtonSymbols(QAbstractSpinBox::NoButtons);
+            dsbx->setDecimals(2);
+            dsbx->setSingleStep(1.0);
+            dsbx->setAlignment(Qt::AlignCenter);
+            return dsbx;
+        } else {
+            auto timeEdit = new QTimeEdit(parent);
+            timeEdit->setButtonSymbols(QAbstractSpinBox::NoButtons);
+            timeEdit->setAlignment(Qt::AlignCenter);
+            return timeEdit;
+        }
+    }
+};
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -50,7 +79,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->tableViewPoints->horizontalHeader()->setDefaultSectionSize(50);
     ui->tableViewPoints->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->tableViewPoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-
+    ui->tableViewPoints->setItemDelegate(new MyItemDelegate(ui->tableViewPoints)); // подтюнил для красоты
     loadSettings();
     on_pbtnFind_clicked();
 }

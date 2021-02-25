@@ -2,7 +2,7 @@ QT       += core gui serialport charts
 
 DESTDIR = $$_PRO_FILE_PWD_/bin
 
-include(../elemer_ascii/elemer_ascii.pri)
+include(../ElemerAscii/ElemerAscii.pri)
 include(../CommonInterfaces/CommonInterfaces.pri)
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -27,6 +27,7 @@ SOURCES += \
 HEADERS += \
     auto.h \
     chartview.h \
+    doublespinbox.h \
     irt5502.h \
     mainwindow.h \
     pointmodel.h

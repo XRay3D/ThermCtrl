@@ -147,7 +147,7 @@
             </spacer>
            </item>
            <item row="0" column="1">
-            <widget class="QDoubleSpinBox" name="dsbxSetPoint">
+            <widget class="DoubleSpinBox" name="dsbxSetPoint">
              <property name="alignment">
               <set>Qt::AlignCenter</set>
              </property>
@@ -321,6 +321,11 @@
    <class>ChartView</class>
    <extends>QGraphicsView</extends>
    <header>chartview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DoubleSpinBox</class>
+   <extends>QDoubleSpinBox</extends>
+   <header>doublespinbox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

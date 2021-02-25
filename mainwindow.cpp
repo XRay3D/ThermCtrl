@@ -5,6 +5,7 @@
 #include "pointmodel.h"
 
 #include <QDebug>
+#include <QMessageBox>
 #include <QScrollBar>
 #include <QSettings>
 #include <algorithm>
@@ -16,26 +17,33 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui { new Ui::MainWindow }
     , pointModel { new PointModel(this) }
-    , irt { new Irt5502(this) }
+    , irt { new Irt5502() }
 {
     ui->setupUi(this);
     ui->statusbar->setFont(font());
 
+    irt->moveToThread(&irtThread);
+    connect(&irtThread, &QThread::finished, irt, &QObject::deleteLater);
+    irtThread.start();
+
     // connect pointModel
-    connect(ui->spinBoxPoints, qOverload<int>(&QSpinBox::valueChanged), pointModel, &PointModel::setPointCount);
+    connect(ui->sbxPoints, qOverload<int>(&QSpinBox::valueChanged), pointModel, &PointModel::setPointCount);
     connect(pointModel, &PointModel::message, ui->statusbar, &QStatusBar::showMessage);
-    pointModel->load();
 
-    // setup comboBoxPort
-    auto ports { PortInfo::availablePorts() };
-    std::sort(ports.begin(), ports.end(), [](const PortInfo& pil, const PortInfo& pir) {
-        return pil.portName().midRef(3).toInt() < pir.portName().midRef(3).toInt();
-    });
+    // connect irt
+    connect(irt, &Irt5502::message, ui->statusbar, &QStatusBar::showMessage);
+    connect(irt, &Irt5502::measuredValue, ui->dsbxReadTemp, &QDoubleSpinBox::setValue);
+    connect(irt, &Irt5502::measuredValue, ui->chartView, &ChartView::addPoint);
+    connect(this, &MainWindow::getValue, irt, &Irt5502::getMasuredValue);
+
+    // setup cmbxPort
+    auto ports { PortInfo::availablePorts().toVector() };
+    std::ranges::sort(ports, {}, [](const PortInfo& pil) { return pil.portName().midRef(3).toInt(); });
     for (auto& port : ports)
-        ui->comboBoxPort->addItem(port.portName());
+        ui->cmbxPort->addItem(port.portName());
 
-    // setup comboBoxDevice
-    ui->comboBoxDevice->addItem("ИРТ5502");
+    // setup cmbxDevice
+    ui->cmbxDevice->addItem("ИРТ5502");
 
     // setup tableViewPoints
     ui->tableViewPoints->setModel(pointModel);
@@ -44,10 +52,13 @@ MainWindow::MainWindow(QWidget* parent)
     ui->tableViewPoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     loadSettings();
+    on_pbtnFind_clicked();
 }
 
 MainWindow::~MainWindow()
 {
+    irtThread.quit();
+    irtThread.wait();
     saveSettings();
     delete ui;
 }
@@ -59,9 +70,10 @@ void MainWindow::saveSettings()
     settings.beginGroup("MainWindow");
     settings.setValue("Geometry", saveGeometry());
     settings.setValue("State", saveState());
-    settings.setValue("Port", ui->comboBoxPort->currentText());
-    settings.setValue("Address", ui->spinBoxAddress->value());
-    settings.setValue("Points", ui->spinBoxPoints->value());
+    settings.setValue("Port", ui->cmbxPort->currentText());
+    settings.setValue("Address", ui->sbxAddress->value());
+    settings.setValue("Points", ui->sbxPoints->value());
+    settings.setValue("SetPoint", ui->dsbxReadTemp->value());
     settings.endGroup();
 
     settings.beginGroup("Splitter");
@@ -76,9 +88,10 @@ void MainWindow::loadSettings()
     settings.beginGroup("MainWindow");
     restoreGeometry(settings.value("Geometry").toByteArray());
     restoreState(settings.value("State").toByteArray());
-    ui->comboBoxPort->setCurrentText(settings.value("Port").toString());
-    ui->spinBoxAddress->setValue(settings.value("Address", 1).toInt());
-    ui->spinBoxPoints->setValue(settings.value("Points", 1).toInt());
+    ui->cmbxPort->setCurrentText(settings.value("Port").toString());
+    ui->sbxAddress->setValue(settings.value("Address", 1).toInt());
+    ui->sbxPoints->setValue(settings.value("Points", 1).toInt());
+    ui->dsbxSetPoint->setValue(settings.value("SetPoint", 25).toDouble());
     settings.endGroup();
 
     settings.beginGroup("Splitter");
@@ -97,46 +110,123 @@ void MainWindow::updateTableViewPointsHeight()
     ui->tableViewPoints->setMaximumHeight(height);
 }
 
+void MainWindow::finded(bool found)
+{
+    ui->statusbar->showMessage(found ? "Термокамера найдена"
+                                     : "Нет связи с термокамерой",
+        1000);
+    ui->grbxAuto->setEnabled(found);
+    ui->grbxMan->setEnabled(found);
+    ui->grbxConnection->setEnabled(!found);
+}
+
 void MainWindow::showEvent(QShowEvent* event)
 {
     QMainWindow::showEvent(event);
     updateTableViewPointsHeight();
 }
 
-void MainWindow::on_pushButtonFind_clicked()
+void MainWindow::on_pbtnFind_clicked()
 {
     qDebug() << __FUNCTION__;
     ui->statusbar->showMessage("Поиск термокамеры...", 1000);
-
-    ui->statusbar->showMessage("Термокамера найдена", 1000);
-
-    ui->statusbar->showMessage("Нет связи", 1000);
+    finded(irt->ping(ui->cmbxPort->currentText(), 19200, ui->sbxAddress->value()));
 }
 
-void MainWindow::on_pushButtonAutoStartStop_clicked(bool checked)
+void MainWindow::on_pbtnAutoStartStop_clicked(bool checked)
 {
-    ui->groupBoxMan->setEnabled(!checked);
-    if (checked) {
-    } else {
-    }
-}
-
-void MainWindow::on_pushButtonManStartStop_clicked(bool checked)
-{
+    ui->grbxMan->setEnabled(!checked);
+    ui->grbxConnection->setEnabled(!checked);
     if (irt->isConnected()) {
-        ui->statusbar->showMessage(checked ? "камера включена" : "камера остановлена");
-        ui->pushButtonManStartStop->setText(checked ? "Стоп" : "Старт на уставку");
-        ui->groupBoxAuto->setEnabled(!checked);
+        if (timerId)
+            killTimer(timerId);
+        if (checked) {
+            ui->chartView->reset();
+            delayType = 0;
+            timerId = startTimer(500);
+            ui->pbtnAutoStartStop->setText("Стоп");
+        } else {
+            timerId = 0;
+            ui->pbtnAutoStartStop->setText("Старт");
+        }
+        ui->sbxPoints->setEnabled(!checked);
+        ui->tableViewPoints->setEnabled(!checked);
     } else {
-        ui->pushButtonManStartStop->setChecked(false);
-        ui->statusbar->showMessage("Нет связи с термокамерой");
+        checked = false;
+        finded(false);
+    }
+    ui->pbtnAutoStartStop->setChecked(checked);
+}
+
+void MainWindow::on_pbtnManReadTemp_clicked()
+{
+    if (irt->getMasuredValue())
+        ui->statusbar->showMessage("Чтение температуры");
+    else
+        finded(false);
+}
+
+void MainWindow::on_pbtnManStart_clicked()
+{
+    if (irt->setSetPoint(ui->dsbxSetPoint->value()) && irt->setEnable(true)) {
+        ui->statusbar->showMessage("Камера включена");
+        ui->grbxAuto->setEnabled(false);
+    } else {
+        finded(false);
     }
 }
 
-void MainWindow::on_pushButtonReadTemp_clicked()
+void MainWindow::on_pbtnManStop_clicked()
 {
+    if (irt->setEnable(false)) {
+        ui->statusbar->showMessage("Камера остановлена");
+        ui->grbxAuto->setEnabled(true);
+    } else {
+        finded(false);
+    }
 }
 
-void MainWindow::on_doubleSpinBoxSetPoint_valueChanged(double arg1)
+void MainWindow::timerEvent(QTimerEvent* event)
 {
+    if (event->timerId() == timerId) {
+
+        switch (delayType) {
+        case 0: // init
+            currentPoint = 0;
+            point = pointModel->point(currentPoint);
+            timeTo = QDateTime::currentDateTime().addMSecs(point.delayTime.msecsSinceStartOfDay()).toSecsSinceEpoch();
+            if (!(irt->setSetPoint(point.temp) && irt->setEnable(true))) {
+                on_pbtnAutoStartStop_clicked(false);
+                finded(false);
+                return;
+            }
+            delayType = 1;
+            break;
+        case 1: // delayTime
+            if (QDateTime::currentDateTime().toSecsSinceEpoch() > timeTo) {
+                timeTo = QDateTime::currentDateTime().addMSecs(point.measureTime.msecsSinceStartOfDay()).toSecsSinceEpoch();
+                delayType = 2;
+            }
+            break;
+        case 2: // measureTime
+            if (QDateTime::currentDateTime().toSecsSinceEpoch() > timeTo) {
+                if (++currentPoint == pointModel->columnCount()) {
+                    on_pbtnAutoStartStop_clicked(false);
+                    QMessageBox::information(this, "", "Время вышло.");
+                    return;
+                }
+                ui->tableViewPoints->selectColumn(currentPoint);
+                point = pointModel->point(currentPoint);
+                if (!(irt->setSetPoint(point.temp) && irt->setEnable(true))) {
+                    on_pbtnAutoStartStop_clicked(false);
+                    finded(false);
+                    return;
+                }
+                timeTo = QDateTime::currentDateTime().addMSecs(point.delayTime.msecsSinceStartOfDay()).toSecsSinceEpoch();
+                delayType = 1;
+            }
+            break;
+        }
+        emit getValue();
+    }
 }

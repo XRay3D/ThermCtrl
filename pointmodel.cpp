@@ -13,7 +13,7 @@ inline QTextStream& operator>>(QTextStream& stream, QTime& time)
 {
     QString str;
     stream >> str;
-    time.fromString(str, "hh:mm");
+    time = QTime::fromString(str, "hh:mm");
     return stream;
 }
 
@@ -41,10 +41,12 @@ PointModel::PointModel(QObject* parent)
     : QAbstractTableModel(parent)
     , m_data { {} }
 {
+    load();
 }
 
 PointModel::~PointModel()
 {
+    save();
 }
 
 void PointModel::setPointCount(int count)
@@ -122,7 +124,7 @@ QVariant PointModel::headerData(int section, Qt::Orientation orientation, int ro
 
 Qt::ItemFlags PointModel::flags(const QModelIndex&) const
 {
-    return Qt::ItemIsEditable | Qt::ItemIsEnabled;
+    return Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
 void PointModel::save()
@@ -179,3 +181,5 @@ void PointModel::load()
         emit message(file.errorString(), TimeOut);
     }
 }
+
+Point PointModel::point(int idx) const { return m_data.value(idx); }

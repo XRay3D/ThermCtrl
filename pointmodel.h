@@ -4,9 +4,9 @@
 #include <QTime>
 
 struct Point {
-    double temp = 25;
-    QTime delayTime = { 1, 0 };
-    QTime measureTime = { 1, 0 };
+    double temp {};
+    QTime delayTime { 0, 0 };
+    QTime measureTime { 0, 0 };
     enum {
         Temp,
         Delay,
@@ -25,10 +25,10 @@ public:
     void setPointCount(int count);
     void save();
     void load();
-
+    Point point(int idx) const;
     // QAbstractItemModel interface
-    int rowCount(const QModelIndex& parent) const override;
-    int columnCount(const QModelIndex& parent) const override;
+    int rowCount(const QModelIndex& = {}) const override;
+    int columnCount(const QModelIndex& = {}) const override;
 
     QVariant data(const QModelIndex& index, int role) const override;
     bool setData(const QModelIndex& index, const QVariant& value, int role) override;

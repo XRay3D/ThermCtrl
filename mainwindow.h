@@ -1,12 +1,14 @@
 #pragma once
 
+#include "pointmodel.h"
+
 #include <QMainWindow>
+#include <QThread>
 
 namespace Ui {
 class MainWindow;
 }
 
-class PointModel;
 class Irt5502;
 
 class MainWindow : public QMainWindow {
@@ -23,23 +25,36 @@ private:
     void loadSettings();
 
     void updateTableViewPointsHeight();
+    void finded(bool found);
 
-    // QtCharts
-    QVector<QPointF> chartsData;
+    PointModel* pointModel {};
 
-    PointModel* pointModel;
-    Irt5502* irt;
+    Irt5502* irt {};
+    QThread irtThread;
 
-protected:
-    // QWidget interface
-    void showEvent(QShowEvent* event) override;
+    int timerId {};
+    int currentPoint {};
+    int delayType {};
+
+    qint64 timeTo;
+
+    Point point;
+
+signals:
+    void getValue();
 
 private slots:
-    void on_pushButtonFind_clicked();
+    void on_pbtnFind_clicked();
 
-    void on_pushButtonAutoStartStop_clicked(bool checked);
-    void on_pushButtonManStartStop_clicked(bool checked);
+    void on_pbtnAutoStartStop_clicked(bool checked);
 
-    void on_pushButtonReadTemp_clicked();
-    void on_doubleSpinBoxSetPoint_valueChanged(double arg1);
+    void on_pbtnManReadTemp_clicked();
+    void on_pbtnManStart_clicked();
+    void on_pbtnManStop_clicked();
+
+protected:
+    // QObject interface
+    void timerEvent(QTimerEvent* event) override;
+    // QWidget interface
+    void showEvent(QShowEvent* event) override;
 };

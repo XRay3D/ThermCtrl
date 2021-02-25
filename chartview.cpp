@@ -8,11 +8,12 @@ ChartView::ChartView(QWidget* parent)
     : QChartView(parent)
     , chart { new QChart }
     , lineSeries { new QLineSeries(this) }
-    , axisX { new QValueAxis(this) }
+    , axisX { new QDateTimeAxis(this) }
     , axisY { new QValueAxis(this) }
 {
     // setup chartView
-    axisX->setLabelFormat("%g");
+    axisX->setFormat("h:mm:ss");
+
     axisY->setTitleText("Температура, ºC");
     axisY->setTitleFont(font());
 
@@ -26,11 +27,33 @@ ChartView::ChartView(QWidget* parent)
     chart->legend()->hide();
     chart->setMargins({});
     chart->setTitle("Температура в камере");
-    axisX->setRange(0, 100);
-    axisY->setRange(0, 100);
-    lineSeries->append(0, 0);
-    lineSeries->append(100, 100);
-
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+    chart->setAnimationDuration(550);
+    chart->setAnimationEasingCurve(QEasingCurve::Linear);
     setRenderHint(QPainter::Antialiasing);
     setChart(chart);
+}
+
+void ChartView::addPoint(double yValue)
+{
+    maxX = QDateTime::currentDateTime();
+    if (!lineSeries->count()) {
+        minY = maxY = yValue;
+        minX = QDateTime::currentDateTime();
+    } else {
+        maxY = std::max(maxY, yValue);
+        minY = std::min(minY, yValue);
+    }
+    lineSeries->append(maxX.toMSecsSinceEpoch(), yValue);
+    axisX->setRange(minX, maxX);
+    axisY->setRange(minY, maxY);
+}
+
+void ChartView::reset()
+{
+    minY = maxY = {};
+    minX = maxX = {};
+    lineSeries->clear();
+    axisX->setRange(minX, maxX);
+    axisY->setRange(minY, maxY);
 }

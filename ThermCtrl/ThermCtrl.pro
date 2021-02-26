@@ -12,6 +12,8 @@ QMAKE_CXXFLAGS += /std:c++latest
 QMAKE_CXXFLAGS += /await
 DEFINES += __cpp_lib_coroutine
 
+win32:RC_FILE = myapp.rc
+
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
@@ -30,7 +32,8 @@ HEADERS += \
     doublespinbox.h \
     irt5502.h \
     mainwindow.h \
-    pointmodel.h
+    pointmodel.h \
+    version.h
 
 FORMS += \
     mainwindow.ui
@@ -41,31 +44,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-#    ThermCtrl/Common.dcu \
-    ThermCtrl/Common.pas \
-    ThermCtrl/LowLvlCom.PAS \
-#    ThermCtrl/LowLvlCom.dcu \
-#    ThermCtrl/MdlLvlCom.dcu \
-    ThermCtrl/MdlLvlCom.pas \
-#    ThermCtrl/ThHCC.dcu \
-    ThermCtrl/ThHCC.pas \
-#    ThermCtrl/ThermCtrl.7z \
-#    ThermCtrl/ThermCtrl.dcu \
-#    ThermCtrl/ThermCtrl.dfm \
-    ThermCtrl/ThermCtrl.pas \
-#    ThermCtrl/ThermoCtrl.dpr \
-#    ThermCtrl/ThermoCtrl.dproj \
-#    ThermCtrl/ThermoCtrl.dproj.local \
-#    ThermCtrl/ThermoCtrl.dsk \
-#    ThermCtrl/ThermoCtrl.exe \
-#    ThermCtrl/ThermoCtrl.identcache \
-#    ThermCtrl/ThermoCtrl.res \
-#    ThermCtrl/ThermoCtrl.zip \
-#    ThermCtrl/ThermoCtrl.~dsk \
-#    ThermCtrl/Time.dcu \
-#    ThermCtrl/Time.dfm \
-    ThermCtrl/Time.pas \
-#    ThermCtrl/config.txt
+    myapp.rc
+
 
 RESOURCES += \
     rc.qrc

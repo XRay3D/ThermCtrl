@@ -4,7 +4,7 @@
 #include <QElapsedTimer>
 
 //#define ALWAYS_OPEN //Если необходимо держать открытым тогда не использовать PortOener
-//#define EMU
+#define EMU
 
 class PortOpener { // RAII
     Irt5502* const cpIrt;

@@ -9,32 +9,35 @@ Automatic::Automatic(Irt5502* irt, PointModel* pointModel, QObject* parent)
     , irt { irt }
     , pointModel { pointModel }
 {
-    qDebug(__FUNCTION__);
 }
 
 Automatic::~Automatic()
 {
-    qDebug(__FUNCTION__);
 }
 
 void Automatic::run()
 {
-    qDebug(__FUNCTION__);
+    irt->setEnable(true);
     for (auto& point : pointModel->data()) {
         irt->setSetPoint(point.temp);
-        timeTo = QDateTime::currentDateTime().addMSecs(point.delayTime.msecsSinceStartOfDay() / 60).toSecsSinceEpoch();
+        timeTo = QDateTime::currentDateTime().addMSecs(point.delayTime.msecsSinceStartOfDay()).toSecsSinceEpoch();
         while (QDateTime::currentDateTime().toSecsSinceEpoch() < timeTo) {
             irt->getMasuredValue();
             msleep(500);
-            if (isInterruptionRequested())
+            if (isInterruptionRequested()) {
+                irt->setEnable(false);
                 return;
+            }
         }
-        timeTo = QDateTime::currentDateTime().addMSecs(point.measureTime.msecsSinceStartOfDay() / 60).toSecsSinceEpoch();
+        timeTo = QDateTime::currentDateTime().addMSecs(point.measureTime.msecsSinceStartOfDay()).toSecsSinceEpoch();
         while (QDateTime::currentDateTime().toSecsSinceEpoch() < timeTo) {
             irt->getMasuredValue();
             msleep(500);
-            if (isInterruptionRequested())
+            if (isInterruptionRequested()) {
+                irt->setEnable(false);
                 return;
+            }
         }
     }
+    irt->setEnable(false);
 }

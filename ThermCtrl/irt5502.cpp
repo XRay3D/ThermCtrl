@@ -3,21 +3,22 @@
 #include <QDebug>
 #include <QElapsedTimer>
 
-//#define AlwaysOpen //Если необходимо держать открытым тогда не использовать PortOener
+//#define ALWAYS_OPEN //Если необходимо держать открытым тогда не использовать PortOener
+//#define EMU
 
 QElapsedTimer t;
 
-class PortOener { // RAII
+class PortOpener { // RAII
     Irt5502* const cpIrt;
 
 public:
-    explicit PortOener(Irt5502* t)
+    explicit PortOpener(Irt5502* t)
         : cpIrt(t)
     {
         emit cpIrt->open(QIODevice::ReadWrite);
         cpIrt->m_connected = cpIrt->m_semaphore.tryAcquire(1, 1000); // ждём открытия порта
     }
-    ~PortOener()
+    ~PortOpener()
     {
         if (cpIrt->m_connected) {
             emit cpIrt->close();
@@ -59,13 +60,13 @@ bool Irt5502::ping(const QString& portName, int baud, int addr)
             m_port->setPortName(portName);
         if (baud != 0)
             m_port->setBaudRate(baud);
-#ifdef AlwaysOpen
+#ifdef ALWAYS_OPEN
         emit open(QIODevice::ReadWrite);
         if (!m_semaphore.tryAcquire(1, 1000) && m_port->isOpen())
             break;
 #endif
         if (getDev(addr) != IRT5502) {
-#ifdef AlwaysOpen
+#ifdef ALWAYS_OPEN
             emit close();
 #endif
             break;
@@ -78,8 +79,8 @@ bool Irt5502::ping(const QString& portName, int baud, int addr)
 int Irt5502::getDev(int addr)
 {
     devType = 0;
-#ifndef AlwaysOpen
-    PortOener po(this);
+#ifndef ALWAYS_OPEN
+    PortOpener po(this);
 #endif
     if (m_connected) {
         int& a = addr;
@@ -89,14 +90,21 @@ int Irt5502::getDev(int addr)
             devType = m_data[1].toInt();
         }
     }
+#ifdef EMU
+    return IRT5502;
+#endif
     return devType;
 }
 
 bool Irt5502::setSetPoint(float val)
 {
     QMutexLocker locker(&m_mutex);
-#ifndef AlwaysOpen
-    PortOener po(this);
+#ifdef EMU
+    set = val;
+    return true;
+#endif
+#ifndef ALWAYS_OPEN
+    PortOpener po(this);
 #endif
     if (m_connected) {
         emit write(createParcel(address, Cmd::WritePar,
@@ -111,8 +119,15 @@ bool Irt5502::setSetPoint(float val)
 bool Irt5502::getMasuredValue()
 {
     QMutexLocker locker(&m_mutex);
-#ifndef AlwaysOpen
-    PortOener po(this);
+#ifdef EMU
+    QRandomGenerator generator(QTime::currentTime().msecsSinceStartOfDay());
+    constexpr double k = 0.01;
+    val = val * k + generator.bounded(static_cast<int>((set - 0.5) * 100), static_cast<int>((set + 0.5) * 100)) * 0.01 * (1.0 - k);
+    emit measuredValue(val);
+    return true;
+#endif
+#ifndef ALWAYS_OPEN
+    PortOpener po(this);
 #endif
     if (m_connected) {
         emit write(createParcel(address, Cmd::ReadPar,
@@ -130,8 +145,11 @@ bool Irt5502::getMasuredValue()
 bool Irt5502::setEnable(bool run)
 {
     QMutexLocker locker(&m_mutex);
-#ifndef AlwaysOpen
-    PortOener po(this);
+#ifdef EMU
+    return true;
+#endif
+#ifndef ALWAYS_OPEN
+    PortOpener po(this);
 #endif
     if (m_connected) {
         emit write(createParcel(address, Cmd::WritePar,

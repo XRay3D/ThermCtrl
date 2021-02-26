@@ -17,8 +17,8 @@
 #include <QLineEdit>
 #include <QTimer>
 
-class DoubleSpinBox : public QDoubleSpinBox {
-//    Q_OBJECT
+class DoubleSpinBox final : public QDoubleSpinBox {
+    //    Q_OBJECT
 public:
     explicit DoubleSpinBox(QWidget* parent = nullptr)
         : QDoubleSpinBox(parent)
@@ -64,7 +64,6 @@ private:
 
     // QWidget interface
 protected:
-
     void keyPressEvent(QKeyEvent* event) override
     {
         //    if (event->key() == Qt::Key_Backspace) {

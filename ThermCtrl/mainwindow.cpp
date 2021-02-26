@@ -1,29 +1,24 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "automatic.h"
 #include "irt5502.h"
 #include "pointmodel.h"
 
-#include <QDateTimeEdit>
-#include <QDebug>
 #include <QMessageBox>
 #include <QScrollBar>
-#include <QSettings>
 #include <QStyledItemDelegate>
-#include <algorithm>
-#include <ranges>
+#include <QTimeEdit>
 
 using PortInfo = QSerialPortInfo;
 
-class MyItemDelegate : public QStyledItemDelegate {
-public:
+struct MyItemDelegate : QStyledItemDelegate {
     MyItemDelegate(QWidget* parent = nullptr)
         : QStyledItemDelegate(parent)
     {
     }
-
     // QAbstractItemDelegate interface
-    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& /*option*/, const QModelIndex& index) const override
+    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override
     {
         if (!index.row()) {
             auto dsbx = new DoubleSpinBox(parent);
@@ -34,7 +29,8 @@ public:
             dsbx->setAlignment(Qt::AlignCenter);
             return dsbx;
         } else {
-            auto timeEdit = new QTimeEdit(parent);
+            auto timeEdit = static_cast<QTimeEdit*>(QStyledItemDelegate::createEditor(parent, option, index));
+            timeEdit->setDisplayFormat("hч. mmм.");
             timeEdit->setButtonSymbols(QAbstractSpinBox::NoButtons);
             timeEdit->setAlignment(Qt::AlignCenter);
             return timeEdit;
@@ -47,21 +43,22 @@ enum { ColumnWidth = 50 };
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui { new Ui::MainWindow }
-    , pointModel { new PointModel(this) }
-    , irt { new Irt5502() }
+    , pIrt { new Irt5502() }
+    , pPointModel { new PointModel(this) }
+    , pAutomatic { new Automatic(pIrt, pPointModel) }
 {
     ui->setupUi(this);
     ui->statusbar->setFont(font());
 
-    irt->moveToThread(&irtThread);
-    connect(&irtThread, &QThread::finished, irt, &QObject::deleteLater);
+    pIrt->moveToThread(&irtThread);
+    connect(&irtThread, &QThread::finished, pIrt, &QObject::deleteLater);
     irtThread.start();
 
-    // connect irt
-    connect(irt, &Irt5502::message, ui->statusbar, &QStatusBar::showMessage);
-    connect(irt, &Irt5502::measuredValue, ui->dsbxReadTemp, &QDoubleSpinBox::setValue);
-    connect(irt, &Irt5502::measuredValue, ui->chartView, &ChartView::addPoint);
-    connect(this, &MainWindow::getValue, irt, &Irt5502::getMasuredValue);
+    // connect pIrt
+    connect(pIrt, &Irt5502::message, ui->statusbar, &QStatusBar::showMessage);
+    connect(pIrt, &Irt5502::measuredValue, ui->dsbxReadTemp, &QDoubleSpinBox::setValue);
+    connect(pIrt, &Irt5502::measuredValue, ui->chartView, &ChartView::addPoint);
+    connect(this, &MainWindow::getValue, pIrt, &Irt5502::getMasuredValue);
 
     // setup cmbxPort
     auto ports { PortInfo::availablePorts().toVector() };
@@ -72,23 +69,24 @@ MainWindow::MainWindow(QWidget* parent)
     // setup cmbxDevice
     ui->cmbxDevice->addItem("ИРТ5502");
 
-    // setup tableViewPoints
-    ui->tableViewPoints->setModel(pointModel);
-    ui->tableViewPoints->horizontalHeader()->setDefaultSectionSize(ColumnWidth);
-    ui->tableViewPoints->horizontalHeader()->setMinimumSectionSize(ColumnWidth);
-    ui->tableViewPoints->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->tableViewPoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->tableViewPoints->setItemDelegate(new MyItemDelegate(ui->tableViewPoints)); // подтюнил для красоты
-    // connect pointModel
-    connect(ui->sbxPoints, qOverload<int>(&QSpinBox::valueChanged), pointModel, &PointModel::setPointCount);
+    // setup twPoints
+    ui->twPoints->setModel(pPointModel);
+    ui->twPoints->horizontalHeader()->setDefaultSectionSize(ColumnWidth);
+    ui->twPoints->horizontalHeader()->setMinimumSectionSize(ColumnWidth);
+    ui->twPoints->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->twPoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->twPoints->setItemDelegate(new MyItemDelegate(ui->twPoints)); // подтюнил для красоты
+
+    // connect pPointModel
+    connect(pPointModel, &PointModel::message, ui->statusbar, &QStatusBar::showMessage);
+    connect(ui->sbxPoints, qOverload<int>(&QSpinBox::valueChanged), pPointModel, &PointModel::setPointCount);
     connect(ui->sbxPoints, qOverload<int>(&QSpinBox::valueChanged), [this] {
         QTimer::singleShot(1, [this] { //задержка ожидания обновления модели
-            auto hsbv = ui->tableViewPoints->horizontalScrollBar()->isVisible();
-            ui->tableViewPoints->horizontalHeader()->setSectionResizeMode(hsbv ? QHeaderView::Fixed
-                                                                               : QHeaderView::Stretch);
+            auto hsbv = ui->twPoints->horizontalScrollBar()->isVisible();
+            ui->twPoints->horizontalHeader()->setSectionResizeMode(hsbv ? QHeaderView::Fixed
+                                                                        : QHeaderView::Stretch);
         });
     });
-    connect(pointModel, &PointModel::message, ui->statusbar, &QStatusBar::showMessage);
 
     loadSettings();
     on_pbtnFind_clicked();
@@ -144,13 +142,13 @@ void MainWindow::loadSettings()
 
 void MainWindow::updateTableViewPointsHeight()
 {
-    auto sb = ui->tableViewPoints->horizontalScrollBar();
-    int height = ui->tableViewPoints->horizontalHeader()->height()
-        + ui->tableViewPoints->rowHeight(0) * 3
+    auto sb = ui->twPoints->horizontalScrollBar();
+    int height = ui->twPoints->horizontalHeader()->height()
+        + ui->twPoints->rowHeight(0) * 3
         + (sb->isVisible() ? sb->height() : sb->height())
         + 2;
-    ui->tableViewPoints->setMinimumHeight(height);
-    ui->tableViewPoints->setMaximumHeight(height);
+    ui->twPoints->setMinimumHeight(height);
+    ui->twPoints->setMaximumHeight(height);
 }
 
 void MainWindow::finded(bool found)
@@ -163,6 +161,12 @@ void MainWindow::finded(bool found)
     ui->grbxConnection->setEnabled(!found);
 }
 
+void MainWindow::finished()
+{
+    on_pbtnAutoStartStop_clicked();
+    QMessageBox::information(this, "", "Время вышло.");
+}
+
 void MainWindow::showEvent(QShowEvent* event)
 {
     QMainWindow::showEvent(event);
@@ -173,28 +177,44 @@ void MainWindow::on_pbtnFind_clicked()
 {
     qDebug() << __FUNCTION__;
     ui->statusbar->showMessage("Поиск термокамеры...", 1000);
-    finded(irt->ping(ui->cmbxPort->currentText(), 19200, ui->sbxAddress->value()));
+    finded(pIrt->ping(ui->cmbxPort->currentText(), 19200, ui->sbxAddress->value()));
 }
 
 void MainWindow::on_pbtnAutoStartStop_clicked(bool checked)
 {
-    ui->grbxMan->setEnabled(!checked);
-    ui->grbxConnection->setEnabled(!checked);
-    if (irt->isConnected()) {
-        if (timerId)
-            killTimer(timerId);
+    if (checked) { // проверка
+        int time {};
+        for (auto& point : pPointModel->data()) {
+            time += point.delayTime.msecsSinceStartOfDay();
+            time += point.measureTime.msecsSinceStartOfDay();
+        }
+        if (!time) {
+            QMessageBox::information(this, "", "Нулевое время во всех ячейках таблицы.");
+            ui->pbtnAutoStartStop->setChecked(false);
+            return;
+        }
+    }
 
+    if (pIrt->isConnected()) {
         if (checked) {
-            ui->chartView->reset();
-            delayType = 0;
-            timerId = startTimer(500);
+            // connect pAutomatic
+            connect(pAutomatic, &QThread::finished, this, &MainWindow::finished);
+            ui->chartView->reset(); // чистка графика
+            pAutomatic->start(); // запуск потока
             ui->pbtnAutoStartStop->setText("Стоп");
         } else {
-            timerId = 0;
+            // disconnect pAutomatic
+            pAutomatic->disconnect();
+            if (pAutomatic->isRunning()) {
+                pAutomatic->requestInterruption(); // остановка потока
+                pAutomatic->wait();
+            }
             ui->pbtnAutoStartStop->setText("Старт");
         }
+        ui->grbxConnection->setEnabled(!checked);
+        ui->grbxMan->setEnabled(!checked);
         ui->sbxPoints->setEnabled(!checked);
-        ui->tableViewPoints->setEnabled(!checked);
+        ui->twPoints->setEnabled(!checked);
     } else {
         checked = false;
         finded(false);
@@ -207,7 +227,7 @@ void MainWindow::on_pbtnAutoStartStop_clicked(bool checked)
 
 void MainWindow::on_pbtnManReadTemp_clicked()
 {
-    if (irt->getMasuredValue())
+    if (pIrt->getMasuredValue())
         ui->statusbar->showMessage("Чтение температуры");
     else
         finded(false);
@@ -215,9 +235,8 @@ void MainWindow::on_pbtnManReadTemp_clicked()
 
 void MainWindow::on_pbtnManStart_clicked()
 {
-    if (irt->setSetPoint(ui->dsbxSetPoint->value()) && irt->setEnable(true)) {
+    if (pIrt->setSetPoint(ui->dsbxSetPoint->value()) && pIrt->setEnable(true)) {
         ui->statusbar->showMessage("Камера включена");
-        ui->grbxAuto->setEnabled(false);
     } else {
         finded(false);
     }
@@ -225,55 +244,9 @@ void MainWindow::on_pbtnManStart_clicked()
 
 void MainWindow::on_pbtnManStop_clicked()
 {
-    if (irt->setEnable(false)) {
+    if (pIrt->setEnable(false)) {
         ui->statusbar->showMessage("Камера остановлена");
-        ui->grbxAuto->setEnabled(true);
     } else {
         finded(false);
-    }
-}
-
-void MainWindow::timerEvent(QTimerEvent* event)
-{
-    if (event->timerId() == timerId) {
-
-        switch (delayType) {
-        case 0: // init
-            currentPoint = 0;
-            point = pointModel->point(currentPoint);
-            timeTo = QDateTime::currentDateTime().addMSecs(point.delayTime.msecsSinceStartOfDay()).toSecsSinceEpoch();
-            if (!(irt->setSetPoint(point.temp) && irt->setEnable(true))) {
-                on_pbtnAutoStartStop_clicked(false);
-                finded(false);
-                return;
-            }
-            delayType = 1;
-            break;
-        case 1: // delayTime
-            if (QDateTime::currentDateTime().toSecsSinceEpoch() > timeTo) {
-                timeTo = QDateTime::currentDateTime().addMSecs(point.measureTime.msecsSinceStartOfDay()).toSecsSinceEpoch();
-                delayType = 2;
-            }
-            break;
-        case 2: // measureTime
-            if (QDateTime::currentDateTime().toSecsSinceEpoch() > timeTo) {
-                if (++currentPoint == pointModel->columnCount()) {
-                    on_pbtnAutoStartStop_clicked(false);
-                    QMessageBox::information(this, "", "Время вышло.");
-                    return;
-                }
-                ui->tableViewPoints->selectColumn(currentPoint);
-                point = pointModel->point(currentPoint);
-                if (!(irt->setSetPoint(point.temp) && irt->setEnable(true))) {
-                    on_pbtnAutoStartStop_clicked(false);
-                    finded(false);
-                    return;
-                }
-                timeTo = QDateTime::currentDateTime().addMSecs(point.delayTime.msecsSinceStartOfDay()).toSecsSinceEpoch();
-                delayType = 1;
-            }
-            break;
-        }
-        emit getValue();
     }
 }

@@ -17,7 +17,7 @@ DEFINES += __cpp_lib_coroutine
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    auto.cpp \
+    automatic.cpp \
     chartview.cpp \
     irt5502.cpp \
     main.cpp \
@@ -25,7 +25,7 @@ SOURCES += \
     pointmodel.cpp
 
 HEADERS += \
-    auto.h \
+    automatic.h \
     chartview.h \
     doublespinbox.h \
     irt5502.h \

@@ -5,11 +5,12 @@
 #include <QMainWindow>
 #include <QThread>
 
+class Automatic;
+class Irt5502;
+
 namespace Ui {
 class MainWindow;
 }
-
-class Irt5502;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -26,19 +27,14 @@ private:
 
     void updateTableViewPointsHeight();
     void finded(bool found);
+    void finished();
 
-    PointModel* pointModel {};
+    Irt5502* pIrt {};
+    PointModel* pPointModel {};
 
-    Irt5502* irt {};
+    Automatic* pAutomatic {};
+
     QThread irtThread;
-
-    int timerId {};
-    int currentPoint {};
-    int delayType {};
-
-    qint64 timeTo;
-
-    Point point;
 
 signals:
     void getValue();
@@ -46,15 +42,13 @@ signals:
 private slots:
     void on_pbtnFind_clicked();
 
-    void on_pbtnAutoStartStop_clicked(bool checked);
+    void on_pbtnAutoStartStop_clicked(bool checked = false);
 
     void on_pbtnManReadTemp_clicked();
     void on_pbtnManStart_clicked();
     void on_pbtnManStop_clicked();
 
 protected:
-    // QObject interface
-    void timerEvent(QTimerEvent* event) override;
     // QWidget interface
     void showEvent(QShowEvent* event) override;
 };

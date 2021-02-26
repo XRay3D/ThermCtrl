@@ -6,10 +6,10 @@
 
 class IrtPort;
 
-class Irt5502 : public QObject, public CommonInterfaces, public ElemerASCII {
+class Irt5502 final : public QObject, public CommonInterfaces, public ElemerASCII {
     Q_OBJECT
     friend class IrtPort;
-    friend class PortOener;
+    friend class PortOpener;
 
 public:
     Irt5502(QObject* parent = nullptr);
@@ -50,6 +50,8 @@ private:
 
     int devType {};
     int address {};
+    double val { 25.0 };
+    double set { 1 };
 
     enum class Cmd : uint8_t {
         GetType = 0,

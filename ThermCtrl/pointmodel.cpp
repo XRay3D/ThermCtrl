@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QMutex>
 #include <QMutexLocker>
+#include <algorithm>
 
 #define TextStream
 //#define DataStream
@@ -49,7 +50,7 @@ PointModel::~PointModel()
     save();
 }
 
-void PointModel::setPointCount(int count)
+void PointModel::setPointCount(size_t count)
 {
     static QMutex m;
     QMutexLocker lok(&m);
@@ -74,17 +75,26 @@ int PointModel::columnCount(const QModelIndex&) const { return m_setPointCount; 
 
 QVariant PointModel::data(const QModelIndex& index, int role) const
 {
-    if (role == Qt::DisplayRole || role == Qt::EditRole || role == Qt::ToolTipRole) {
+    if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
         switch (index.row()) {
         case Point::Temp:
             return m_data[index.column()].temp;
         case Point::Delay:
-            return m_data[index.column()].delayTime; //.toString("hч. mmм.");
+            return m_data[index.column()].delayTime.toString("hч. mmм.");
         case Point::Measure:
-            return m_data[index.column()].measureTime; //.toString("hч. mmм.");
+            return m_data[index.column()].measureTime.toString("hч. mmм.");
         }
     } else if (role == Qt::TextAlignmentRole) {
         return Qt::AlignCenter;
+    } else if (role == Qt::EditRole) {
+        switch (index.row()) {
+        case Point::Temp:
+            return m_data[index.column()].temp;
+        case Point::Delay:
+            return m_data[index.column()].delayTime;
+        case Point::Measure:
+            return m_data[index.column()].measureTime;
+        }
     }
     return {};
 }
@@ -182,4 +192,7 @@ void PointModel::load()
     }
 }
 
-Point PointModel::point(int idx) const { return m_data.value(idx); }
+Point PointModel::point(size_t idx) const
+{
+    return m_data[std::clamp(idx, {}, m_data.size() - 1)];
+}

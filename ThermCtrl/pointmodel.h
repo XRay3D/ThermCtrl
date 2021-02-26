@@ -2,17 +2,35 @@
 
 #include <QAbstractTableModel>
 #include <QTime>
+#include <ranges>
 
 struct Point {
-    double temp {};
-    QTime delayTime { 0, 0 };
-    QTime measureTime { 0, 0 };
+    double temp { 25.0 };
+    QTime delayTime { 0, 30 };
+    QTime measureTime { 0, 30 };
     enum {
         Temp,
         Delay,
         Measure,
         RowCount,
     };
+};
+
+template <class T, class A>
+class VectorView : public std::ranges::view_interface<VectorView<T, A>> {
+public:
+    // We need to define a default constructor to satisfy the view concept.
+    VectorView() = default;
+    VectorView(const std::vector<T, A>& vec, size_t count)
+        : m_begin(vec.cbegin())
+        , m_end(vec.cbegin() + count)
+    {
+    }
+    auto begin() const { return m_begin; }
+    auto end() const { return m_end; }
+
+private:
+    typename std::vector<T, A>::const_iterator m_begin, m_end;
 };
 
 class PointModel final : public QAbstractTableModel {
@@ -22,10 +40,12 @@ public:
     explicit PointModel(QObject* parent = nullptr);
     ~PointModel() override;
 
-    void setPointCount(int count);
+    void setPointCount(size_t count);
     void save();
     void load();
-    Point point(int idx) const;
+    Point point(size_t idx) const;
+    auto data() { return VectorView(m_data, m_setPointCount); }
+
     // QAbstractItemModel interface
     int rowCount(const QModelIndex& = {}) const override;
     int columnCount(const QModelIndex& = {}) const override;
@@ -40,6 +60,6 @@ signals:
     void message(const QString&, int = {});
 
 private:
-    QVector<Point> m_data;
-    int m_setPointCount = 1;
+    std::vector<Point> m_data;
+    size_t m_setPointCount = 1;
 };

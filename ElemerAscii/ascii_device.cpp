@@ -41,7 +41,7 @@ bool AsciiDevice::ping(const QString& portName, int baud, int addr)
             port->setPortName(portName);
         if (baud != 0)
             port->setBaudRate(baud);
-#ifndef EL_ALWAYS_OPEN
+#ifdef EL_ALWAYS_OPEN
         emit open(QIODevice::ReadWrite);
         if (!m_semaphore.tryAcquire(1, 1000) && port->isOpen())
             break;
@@ -50,7 +50,7 @@ bool AsciiDevice::ping(const QString& portName, int baud, int addr)
         m_portThread.msleep(50);
 #endif
         if (getDev(addr) != type()) {
-#ifdef EL_ALWAYS_OPEN
+#ifndef EL_ALWAYS_OPEN
             emit close();
 #endif
             break;
@@ -62,7 +62,7 @@ bool AsciiDevice::ping(const QString& portName, int baud, int addr)
 
 DeviceType AsciiDevice::getDev(int addr)
 {
-#ifdef EL_ALWAYS_OPEN
+#ifndef EL_ALWAYS_OPEN
     PortOpener po(this);
 #endif
     if (isConnected()) {

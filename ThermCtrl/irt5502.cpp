@@ -17,7 +17,7 @@ bool Irt5502::setSetPoint(float val)
     set = val;
     return true;
 #endif
-#ifdef EL_ALWAYS_OPEN
+#ifndef EL_ALWAYS_OPEN
     PortOpener po(this);
 #endif
     if (isConnected()) {
@@ -40,7 +40,7 @@ bool Irt5502::getMasuredValue()
     emit measuredValue(val);
     return true;
 #endif
-#ifdef EL_ALWAYS_OPEN
+#ifndef EL_ALWAYS_OPEN
     PortOpener po(this);
 #endif
     if (isConnected()) {
@@ -62,7 +62,7 @@ bool Irt5502::setEnable(bool run)
 #ifdef EL_EMU
     return true;
 #endif
-#ifdef EL_ALWAYS_OPEN
+#ifndef EL_ALWAYS_OPEN
     PortOpener po(this);
 #endif
     if (isConnected()) {

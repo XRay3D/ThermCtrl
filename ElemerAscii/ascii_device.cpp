@@ -45,8 +45,8 @@ bool AsciiDevice::ping(const QString& portName, int baud, int addr)
         emit open(QIODevice::ReadWrite);
         if (!m_semaphore.tryAcquire(1, 1000) && port->isOpen())
             break;
-        port->setRequestToSend(true);
-        port->setDataTerminalReady(false);
+        port->setDataTerminalReady(dtr == DTR::On);
+        port->setRequestToSend(dts == DTS::On);
         m_portThread.msleep(50);
 #endif
         if (getDev(addr) != type()) {

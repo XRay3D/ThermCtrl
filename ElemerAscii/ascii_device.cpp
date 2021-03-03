@@ -50,7 +50,7 @@ bool AsciiDevice::ping(const QString& portName, int baud, int addr)
         m_portThread.msleep(50);
 #endif
         if (getDev(addr) != type()) {
-#ifndef EL_ALWAYS_OPEN
+#ifdef EL_ALWAYS_OPEN
             emit close();
 #endif
             break;
@@ -125,6 +125,30 @@ QByteArray AsciiDevice::calcCrc(const QByteArray& parcel)
         crcHi = tableCrc16Hi[index];
     }
     return QByteArray::number(crcHi << 8 | crcLo);
+}
+
+////////////////////////////////////////////////////////////
+/// \brief PortOpener::PortOpener
+/// \param ad
+///
+PortOpener::PortOpener(AsciiDevice* ad)
+    : pAsciiDevice(ad)
+{
+    emit pAsciiDevice->open(QIODevice::ReadWrite);
+    pAsciiDevice->m_connected = pAsciiDevice->m_semaphore.tryAcquire(1, 1000); // ждём открытия порта
+    if (pAsciiDevice->m_connected) {
+        pAsciiDevice->port->setDataTerminalReady(pAsciiDevice->dtr == DTR::On);
+        pAsciiDevice->port->setRequestToSend(pAsciiDevice->dts == DTS::On);
+        pAsciiDevice->m_portThread.msleep(50);
+    }
+}
+
+PortOpener::~PortOpener()
+{
+    if (pAsciiDevice->m_connected) {
+        emit pAsciiDevice->close();
+        pAsciiDevice->m_semaphore.tryAcquire(1, 1000); // ждём закрытия порта
+    }
 }
 
 }

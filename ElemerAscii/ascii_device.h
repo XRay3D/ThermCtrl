@@ -108,15 +108,7 @@ public:
         std::is_trivial_v<T>;
     }
     {
-        T t {};
-        auto data { QByteArray::fromHex(m_data.value(index)) };
-        qDebug() << data.size() << sizeof(T);
-        if (data.size() == sizeof(T)) {
-            ok ? * ok = true : true;
-            memcpy(&t, data.data(), data.size());
-        } else
-            ok ? * ok = false : false;
-        return t;
+        return fromHex<T>(QByteArray::fromHex(m_data.value(index)), ok);
     }
 
     template <typename T>
@@ -128,13 +120,13 @@ public:
         std::is_trivial_v<T>;
     }
     {
-        T t {};
-        if (data.size() == sizeof(T)) {
-            ok ? * ok = true : true;
-            memcpy(&t, data.data(), data.size());
-        } else
-            ok ? * ok = false : false;
-        return t;
+        qDebug() << __FUNCTION__ << data.size() << sizeof(T);
+        if (data.size() != sizeof(T)) {
+            ok ? (*ok = false) : false;
+            return T {};
+        }
+        ok ? (*ok = true) : true;
+        return *reinterpret_cast<T*>(const_cast<char*>(data.data()));
     }
 
     static void waitAllReset() { waitAllSemaphore.acquire(waitAllSemaphore.available()); }
@@ -258,24 +250,8 @@ class PortOpener { // RAII
     AsciiDevice* const pAsciiDevice;
 
 public:
-    explicit PortOpener(AsciiDevice* ad)
-        : pAsciiDevice(ad)
-    {
-        emit pAsciiDevice->open(QIODevice::ReadWrite);
-        pAsciiDevice->m_connected = pAsciiDevice->m_semaphore.tryAcquire(1, 1000); // ждём открытия порта
-        if (pAsciiDevice->m_connected) {
-            pAsciiDevice->port->setDataTerminalReady(pAsciiDevice->dtr == DTR::On);
-            pAsciiDevice->port->setRequestToSend(pAsciiDevice->dts == DTS::On);
-            pAsciiDevice->m_portThread.msleep(50);
-        }
-    }
-    ~PortOpener()
-    {
-        if (pAsciiDevice->m_connected) {
-            emit pAsciiDevice->close();
-            pAsciiDevice->m_semaphore.tryAcquire(1, 1000); // ждём закрытия порта
-        }
-    }
+    explicit PortOpener(AsciiDevice* ad);
+    ~PortOpener();
 };
 
 }

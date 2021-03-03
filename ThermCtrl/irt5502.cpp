@@ -4,45 +4,23 @@
 #include <QElapsedTimer>
 
 using namespace Elemer;
-//#define ALWAYS_OPEN //Если необходимо держать открытым тогда не использовать PortOener
-#define EMU
 
 Irt5502::Irt5502(QObject* parent)
     : Elemer::AsciiDevice(parent)
 {
 }
 
-int Irt5502::getDev(int addr)
-{
-    devType = 0;
-#ifndef ALWAYS_OPEN
-    PortOpener po(this);
-#endif
-    if (m_connected) {
-        int& a = addr;
-        emit write(createParcel(a, 0));
-        if (wait()) {
-            address = addr;
-            devType = m_data[1].toInt();
-        }
-    }
-#ifdef EMU
-    return IRT5502;
-#endif
-    return devType;
-}
-
 bool Irt5502::setSetPoint(float val)
 {
     QMutexLocker locker(&m_mutex);
-#ifdef EMU
+#ifdef EL_EMU
     set = val;
     return true;
 #endif
-#ifndef ALWAYS_OPEN
+#ifdef EL_ALWAYS_OPEN
     PortOpener po(this);
 #endif
-    if (m_connected) {
+    if (isConnected()) {
         emit write(createParcel(address, Cmd::WritePar,
             Hex(Write), SkipSemicolon {}, Hex(Par::SetPoint),
             Hex(val)));
@@ -55,17 +33,17 @@ bool Irt5502::setSetPoint(float val)
 bool Irt5502::getMasuredValue()
 {
     QMutexLocker locker(&m_mutex);
-#ifdef EMU
+#ifdef EL_EMU
     QRandomGenerator generator(QTime::currentTime().msecsSinceStartOfDay());
     constexpr double k = 0.01;
     val = val * k + generator.bounded(static_cast<int>((set - 0.5) * 100), static_cast<int>((set + 0.5) * 100)) * 0.01 * (1.0 - k);
     emit measuredValue(val);
     return true;
 #endif
-#ifndef ALWAYS_OPEN
+#ifdef EL_ALWAYS_OPEN
     PortOpener po(this);
 #endif
-    if (m_connected) {
+    if (isConnected()) {
         emit write(createParcel(address, Cmd::ReadPar,
             Hex(Read), SkipSemicolon {}, Hex(Par::All)));
         if (wait()) {
@@ -81,13 +59,13 @@ bool Irt5502::getMasuredValue()
 bool Irt5502::setEnable(bool run)
 {
     QMutexLocker locker(&m_mutex);
-#ifdef EMU
+#ifdef EL_EMU
     return true;
 #endif
-#ifndef ALWAYS_OPEN
+#ifdef EL_ALWAYS_OPEN
     PortOpener po(this);
 #endif
-    if (m_connected) {
+    if (isConnected()) {
         emit write(createParcel(address, Cmd::WritePar,
             Hex(Write), SkipSemicolon {}, Hex(Par::Enable),
             Hex(run)));

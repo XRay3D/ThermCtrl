@@ -1,12 +1,12 @@
 #include "ascii_device.h"
 
-#define EMU
-
 namespace Elemer {
 
-AsciiDevice::AsciiDevice(QObject* parent)
+AsciiDevice::AsciiDevice(QObject* parent, DTR dtr, DTS dts)
     : QObject(parent)
     , port(new Port(this))
+    , dtr(dtr)
+    , dts(dts)
 {
     port->moveToThread(&m_portThread);
     connect(&m_portThread, &QThread::finished, port, &QObject::deleteLater);
@@ -27,7 +27,7 @@ bool AsciiDevice::ping(const QString& portName, int baud, int addr)
 {
     QMutexLocker locker(&m_mutex);
     m_connected = true;
-#ifdef EMU
+#ifdef EL_EMU
     return m_connected;
 #endif
 
@@ -41,16 +41,16 @@ bool AsciiDevice::ping(const QString& portName, int baud, int addr)
             port->setPortName(portName);
         if (baud != 0)
             port->setBaudRate(baud);
-#ifdef ALWAYS_OPEN
+#ifndef EL_ALWAYS_OPEN
         emit open(QIODevice::ReadWrite);
         if (!m_semaphore.tryAcquire(1, 1000) && port->isOpen())
             break;
         port->setRequestToSend(true);
         port->setDataTerminalReady(false);
-        m_portThread.msleep(100);
+        m_portThread.msleep(50);
 #endif
         if (getDev(addr) != type()) {
-#ifdef ALWAYS_OPEN
+#ifdef EL_ALWAYS_OPEN
             emit close();
 #endif
             break;
@@ -62,17 +62,17 @@ bool AsciiDevice::ping(const QString& portName, int baud, int addr)
 
 DeviceType AsciiDevice::getDev(int addr)
 {
-#ifndef ALWAYS_OPEN
+#ifdef EL_ALWAYS_OPEN
     PortOpener po(this);
 #endif
-    if (m_connected) {
+    if (isConnected()) {
         emit write(createParcel(addr, 0));
         if (wait()) {
             address = addr;
             return static_cast<DeviceType>(m_data[1].toInt());
         }
     }
-#ifdef EMU
+#ifdef EL_EMU
     return type();
 #endif
     return {};

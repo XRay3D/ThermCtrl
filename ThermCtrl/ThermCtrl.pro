@@ -38,6 +38,11 @@ HEADERS += \
 FORMS += \
     mainwindow.ui
 
+DEFINES += \
+#    EL_EMU \           #Эмуляция работы с устройством
+#    EL_ALWAYS_OPEN \   #Если необходимо держать открытым тогда не использовать PortOener
+
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

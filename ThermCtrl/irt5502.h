@@ -14,7 +14,6 @@ public:
 
     Elemer::DeviceType type() const override { return Elemer::IRT5502; };
 
-    int getDev(int addr);
 
     bool setSetPoint(float val);
     bool getMasuredValue();

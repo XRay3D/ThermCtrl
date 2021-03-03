@@ -13,5 +13,5 @@ public:
     virtual void close() = 0;
 
 protected:
-    bool m_connected = false;
+    mutable bool m_connected = false;
 };

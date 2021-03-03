@@ -16,9 +16,6 @@
 #include <commoninterfaces.h>
 #include <concepts>
 
-#define ALWAYS_OPEN //Если необходимо держать открытым тогда не использовать PortOener
-//#define EMU
-
 namespace Elemer {
 
 enum DeviceType : uint16_t {
@@ -33,6 +30,15 @@ enum DeviceType : uint16_t {
     IRT5920 = 9,
 
     MAN = 50,
+};
+
+enum class DTR : bool {
+    Off,
+    On
+};
+enum class DTS : bool {
+    Off,
+    On
 };
 
 struct Hex {
@@ -63,17 +69,18 @@ struct SkipSemicolon {
 
 class AsciiDevice : public QObject, public CommonInterfaces {
     Q_OBJECT
-
+    friend class Port;
+    friend class PortOpener;
     static inline const QByteArray success_ { "$0" };
 
 public:
-    AsciiDevice(QObject* parent = nullptr);
+    AsciiDevice(QObject* parent = nullptr, DTR dtr = DTR::Off, DTS dts = DTS::Off);
 
     ~AsciiDevice();
 
     virtual DeviceType type() const = 0;
 
-    bool ping(const QString& portName = QString(), int baud = 9600, int addr = 0) override;
+    bool ping(const QString& portName = {}, int baud = 9600, int addr = 0) override;
 
     DeviceType getDev(int addr);
 
@@ -153,8 +160,9 @@ protected:
     int address {};
 
 private:
-    friend class Port;
-    friend class PortOpener;
+    DTR dtr;
+    DTS dts;
+
     QByteArray parcel;
 
     // integral // enum
@@ -256,9 +264,9 @@ public:
         emit pAsciiDevice->open(QIODevice::ReadWrite);
         pAsciiDevice->m_connected = pAsciiDevice->m_semaphore.tryAcquire(1, 1000); // ждём открытия порта
         if (pAsciiDevice->m_connected) {
-            pAsciiDevice->port->setRequestToSend(true);
-            pAsciiDevice->port->setDataTerminalReady(false);
-            pAsciiDevice->port->waitForReadyRead(10);
+            pAsciiDevice->port->setDataTerminalReady(pAsciiDevice->dtr == DTR::On);
+            pAsciiDevice->port->setRequestToSend(pAsciiDevice->dts == DTS::On);
+            pAsciiDevice->m_portThread.msleep(50);
         }
     }
     ~PortOpener()

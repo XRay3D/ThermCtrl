@@ -1,18 +1,37 @@
 #pragma once
 
+#include "common_types.h"
+#include "port.h"
+
 #include <QByteArray>
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QList>
+#include <QMutex>
+#include <QSemaphore>
+#include <QSerialPort>
+#include <QThread>
 #include <array>
 #include <charconv>
+#include <commoninterfaces.h>
 #include <concepts>
 
-enum {
+#define ALWAYS_OPEN //Если необходимо держать открытым тогда не использовать PortOener
+//#define EMU
+
+namespace Elemer {
+
+enum DeviceType : uint16_t {
+    Null,
+
     COMMUTATOR = 16,
+
     IKSU_2000 = 15,
-    IRT = 9,
+
+    IRT5501 = 41,
     IRT5502 = 54,
+    IRT5920 = 9,
+
     MAN = 50,
 };
 
@@ -20,30 +39,128 @@ struct Hex {
     const QByteArray hex;
 
     template <typename T>
-    explicit Hex(T&& val) requires requires(T) {
+    explicit Hex(T&& val) requires requires(T)
+    {
         std::is_arithmetic_v<T>;
         std::is_enum_v<T>;
     } : hex(QByteArray(reinterpret_cast<const char*>(&val), sizeof(std::decay_t<T>)).toHex().toUpper())
-    {}
+    {
+    }
 
     template <typename T>
     explicit Hex(T&& val) requires std::is_same_v<T, QString> : hex(val.toLocal8Bit().toHex().toUpper())
-    {}
+    {
+    }
 
     template <typename T>
     explicit Hex(T&& val) requires std::is_same_v<T, QByteArray> : hex(val.toHex().toUpper())
-    {}
+    {
+    }
 };
 
 struct SkipSemicolon {
 };
 
-class ElemerASCII {
-    static inline QByteArray parcel;
+class AsciiDevice : public QObject, public CommonInterfaces {
+    Q_OBJECT
 
-    // integral
+    static inline const QByteArray success_ { "$0" };
+
+public:
+    AsciiDevice(QObject* parent = nullptr);
+
+    ~AsciiDevice();
+
+    virtual DeviceType type() const = 0;
+
+    bool ping(const QString& portName = QString(), int baud = 9600, int addr = 0) override;
+
+    DeviceType getDev(int addr);
+
+    bool success();
+    bool checkParcel();
+
+    QByteArray calcCrc(const QByteArray& parcel);
+
+    template <typename... Ts>
+    QByteArray createParcel(Ts&&... args)
+    {
+        parcel.clear();
+        parcel.append(':');
+        (func(args), ...);
+        parcel.append(calcCrc(parcel)).append('\r');
+        return QByteArray(1, -1 /*0xFF*/) + parcel;
+    }
+
     template <typename T>
-    void func(T&& arg) requires std::is_integral_v<std::decay_t<T>> {
+    auto fromHex(int index, bool* ok = nullptr) requires requires(T)
+    {
+        std::is_arithmetic_v<T>;
+        std::is_enum_v<T>;
+        std::is_pod_v<T>;
+        std::is_trivial_v<T>;
+    }
+    {
+        T t {};
+        auto data { QByteArray::fromHex(m_data.value(index)) };
+        qDebug() << data.size() << sizeof(T);
+        if (data.size() == sizeof(T)) {
+            ok ? * ok = true : true;
+            memcpy(&t, data.data(), data.size());
+        } else
+            ok ? * ok = false : false;
+        return t;
+    }
+
+    template <typename T>
+    auto fromHex(const QByteArray& data, bool* ok = nullptr) requires requires(T)
+    {
+        std::is_arithmetic_v<T>;
+        std::is_enum_v<T>;
+        std::is_pod_v<T>;
+        std::is_trivial_v<T>;
+    }
+    {
+        T t {};
+        if (data.size() == sizeof(T)) {
+            ok ? * ok = true : true;
+            memcpy(&t, data.data(), data.size());
+        } else
+            ok ? * ok = false : false;
+        return t;
+    }
+
+    static void waitAllReset() { waitAllSemaphore.acquire(waitAllSemaphore.available()); }
+    static bool waitAll(int n, int timeout) { return waitAllSemaphore.tryAcquire(n, timeout); }
+
+signals:
+    void open(int mode) override;
+    void close() override;
+    void write(const QByteArray& data);
+    void message(const QString&, int timout = {});
+
+protected:
+    bool wait(int timeout = 1000);
+    static inline QSemaphore waitAllSemaphore;
+
+    Port* port;
+    QList<QByteArray> m_data;
+    QByteArray m_lastRetCode;
+    QByteArray m_parcel;
+    QSemaphore m_semaphore;
+    QThread m_portThread;
+    QMutex m_mutex;
+    int address {};
+
+private:
+    friend class Port;
+    friend class PortOpener;
+    QByteArray parcel;
+
+    // integral // enum
+    template <typename T>
+        void func(T&& arg) requires std::is_integral_v<std::decay_t<T>> || std::is_enum_v<std::decay_t<T>>
+    {
         std::array<char, 16> str { 0 };
         auto [ptr, ec] = std::to_chars(str.data(), str.data() + str.size(), static_cast<int64_t>(arg));
         if (!(ec == std::errc {}))
@@ -53,7 +170,8 @@ class ElemerASCII {
 
     // floating point
     template <typename T>
-    void func(T&& arg) requires std::is_floating_point_v<std::decay_t<T>> {
+    void func(T&& arg) requires std::is_floating_point_v<std::decay_t<T>>
+    {
         std::array<char, 16> str { 0 };
         auto [ptr, ec] = std::to_chars(str.data(), str.data() + str.size(), arg, std::chars_format::fixed, 5);
         if (!(ec == std::errc {}))
@@ -61,37 +179,31 @@ class ElemerASCII {
         parcel.append(str.data()).append(';');
     };
 
-    // enum
-    template <typename T>
-    void func(T&& arg) requires std::is_enum_v<std::decay_t<T>> {
-        std::array<char, 16> str { 0 };
-        auto [ptr, ec] = std::to_chars(str.data(), str.data() + str.size(), static_cast<int>(arg));
-        if (!(ec == std::errc {}))
-            qDebug() << static_cast<int>(ec);
-        parcel.append(str.data()).append(';');
-    };
-
     // Hex
     template <typename T>
-    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, Hex> {
+    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, Hex>
+    {
         parcel.append(arg.hex).append(';');
     };
 
     // QByteArray
     template <typename T>
-    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, QByteArray> {
+    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, QByteArray>
+    {
         parcel.append(arg).append(';');
     };
 
     // QString
     template <typename T>
-    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, QString> {
+    void func(T&& arg) requires std::is_same_v<std::decay_t<T>, QString>
+    {
         parcel.append(arg.toLocal8Bit()).append(';');
     };
 
     // SkipSemicolon
     template <typename T>
-    void func(T&& /*arg*/) requires std::is_same_v<std::decay_t<T>, SkipSemicolon> {
+    void func(T&& /*arg*/) requires std::is_same_v<std::decay_t<T>, SkipSemicolon>
+    {
         parcel.resize(parcel.size() - 1);
     };
 
@@ -113,6 +225,7 @@ class ElemerASCII {
         0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41,
         0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40
     };
+
     static constexpr uint8_t tableCrc16Hi[] {
         0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2, 0xC6, 0x06, 0x07, 0xC7, 0x05, 0xC5, 0xC4, 0x04,
         0xCC, 0x0C, 0x0D, 0xCD, 0x0F, 0xCF, 0xCE, 0x0E, 0x0A, 0xCA, 0xCB, 0x0B, 0xC9, 0x09, 0x08, 0xC8,
@@ -130,73 +243,31 @@ class ElemerASCII {
         0x9C, 0x5C, 0x5D, 0x9D, 0x5F, 0x9F, 0x9E, 0x5E, 0x5A, 0x9A, 0x9B, 0x5B, 0x99, 0x59, 0x58, 0x98,
         0x88, 0x48, 0x49, 0x89, 0x4B, 0x8B, 0x8A, 0x4A, 0x4E, 0x8E, 0x8F, 0x4F, 0x8D, 0x4D, 0x4C, 0x8C,
         0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42, 0x43, 0x83, 0x41, 0x81, 0x80, 0x40
-
     };
+};
 
-    static inline const QByteArray success_ { "$0" };
+class PortOpener { // RAII
+    AsciiDevice* const pAsciiDevice;
 
 public:
-    bool success() {
-        m_lastRetCode = m_data.value(1);
-        return m_lastRetCode == success_;
-    };
-
-    QByteArray calcCrc(const QByteArray& parcel) {
-        // (X^16 + X^15 + X^2 + 1).
-        uint16_t crcLo = 0xFF, crcHi = 0xFF;
-        for (auto byteIt = parcel.begin() + 1; byteIt != parcel.end(); ++byteIt) {
-            uint8_t index = crcLo ^ *byteIt;
-            crcLo = crcHi ^ tableCrc16Lo[index];
-            crcHi = tableCrc16Hi[index];
+    explicit PortOpener(AsciiDevice* ad)
+        : pAsciiDevice(ad)
+    {
+        emit pAsciiDevice->open(QIODevice::ReadWrite);
+        pAsciiDevice->m_connected = pAsciiDevice->m_semaphore.tryAcquire(1, 1000); // ждём открытия порта
+        if (pAsciiDevice->m_connected) {
+            pAsciiDevice->port->setRequestToSend(true);
+            pAsciiDevice->port->setDataTerminalReady(false);
+            pAsciiDevice->port->waitForReadyRead(10);
         }
-        return QByteArray::number(crcHi << 8 | crcLo);
     }
-
-    bool checkParcel() {
-        if (int index = m_parcel.indexOf('!'); index > 0)
-            m_parcel.remove(0, index);
-
-        if (int index = m_parcel.lastIndexOf('\r'); index > 0)
-            m_parcel.resize(index);
-
-        if (int index = m_parcel.lastIndexOf(';') + 1;
-            index > 0 && calcCrc(m_parcel.left(index)).toUInt() == m_parcel.right(m_parcel.length() - index).toUInt()) {
-            m_data = m_parcel.split(';');
-            m_data.front().remove(0, 1);
-            return true;
+    ~PortOpener()
+    {
+        if (pAsciiDevice->m_connected) {
+            emit pAsciiDevice->close();
+            pAsciiDevice->m_semaphore.tryAcquire(1, 1000); // ждём закрытия порта
         }
-        m_data.clear();
-        return false;
     }
-
-    template <typename... Ts>
-    QByteArray createParcel(Ts&&... args) {
-        parcel.clear();
-        parcel.append(':');
-        (func(args), ...);
-        parcel.append(calcCrc(parcel)).append('\r');
-        return QByteArray(1, -1 /*0xFF*/) + parcel;
-    }
-
-    template <typename T>
-    auto fromHex(int index, bool* ok = nullptr) requires requires(T) {
-        std::is_arithmetic_v<T>;
-        std::is_enum_v<T>;
-        std::is_pod_v<T>;
-        std::is_trivial_v<T>;
-    } {
-        T t {};
-        auto data { QByteArray::fromHex(m_data.value(index)) };
-        if (data.size() == sizeof(T)) {
-            ok ? * ok = true : true;
-            memcpy(&t, data.data(), data.size());
-        } else
-            ok ? * ok = false : false;
-        return t;
-    }
-
-protected:
-    QList<QByteArray> m_data;
-    QByteArray m_lastRetCode;
-    QByteArray m_parcel;
 };
+
+}

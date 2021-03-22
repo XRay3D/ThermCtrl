@@ -2,7 +2,7 @@ QT       += core gui serialport charts
 
 DESTDIR = $$_PRO_FILE_PWD_/bin
 
-include(../ElemerAscii/ElemerAscii.pri)
+include(../ElemerDevice/ElemerDevice.pri)
 include(../CommonInterfaces/CommonInterfaces.pri)
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets

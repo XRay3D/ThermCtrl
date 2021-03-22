@@ -17,17 +17,14 @@ bool Irt5502::setSetPoint(float val)
     set = val;
     return true;
 #endif
-#ifndef EL_ALWAYS_OPEN
-    PortOpener po(this);
-#endif
-    if (isConnected()) {
-        emit write(createParcel(address, Cmd::WritePar,
-            Hex(Write), SkipSemicolon {}, Hex(Par::SetPoint),
-            Hex(val)));
-        if (wait() && success())
-            return true;
-    }
-    return {};
+    PortOpener po(policy == PortPolicy::CloseAfterExchange ? this : nullptr);
+    bool success = isConnected() && writeHex<Cmd::WritePar>(Write, Par::SetPoint, Semicolon {}, val);
+    //    if (isConnected()) {
+    //        emit write(createParcel(address, , Hex(Write), SkipSemicolon {}, Hex(Par::SetPoint), Hex(val)));
+    //        if (wait() && success())
+    //            return true;
+    //    }
+    return success;
 }
 
 bool Irt5502::getMasuredValue()
@@ -40,20 +37,21 @@ bool Irt5502::getMasuredValue()
     emit measuredValue(val);
     return true;
 #endif
-#ifndef EL_ALWAYS_OPEN
-    PortOpener po(this);
-#endif
-    if (isConnected()) {
-        emit write(createParcel(address, Cmd::ReadPar,
-            Hex(Read), SkipSemicolon {}, Hex(Par::All)));
-        if (wait()) {
-            bool ok;
-            if (auto val = fromHex<AllChValIrt5502>(1, &ok); ok)
-                emit measuredValue(val.ch1val);
-            return true;
-        }
-    }
-    return {};
+    AllChValIrt5502 val;
+    PortOpener po(policy == PortPolicy::CloseAfterExchange ? this : nullptr);
+    bool success = isConnected() && readHex<Cmd::ReadPar, Hex { Read, Par::All }>(val);
+    return success;
+    //    if (isConnected()) {
+    //        emit write(createParcel(address, Cmd::ReadPar,
+    //            Hex(Read), SkipSemicolon {}, Hex(Par::All)));
+    //        if (wait()) {
+    //            bool ok;
+    //            if (auto val = fromHex<AllChValIrt5502>(1, &ok); ok)
+    //                emit measuredValue(val.ch1val);
+    //            return true;
+    //        }
+    //    }
+    //    return {};
 }
 
 bool Irt5502::setEnable(bool run)
@@ -62,28 +60,16 @@ bool Irt5502::setEnable(bool run)
 #ifdef EL_EMU
     return true;
 #endif
-#ifndef EL_ALWAYS_OPEN
-    PortOpener po(this);
-#endif
-    if (isConnected()) {
-        emit write(createParcel(address, Cmd::WritePar,
-            Hex(Write), SkipSemicolon {}, Hex(Par::Enable),
-            Hex(run)));
-        if (wait() && success())
-            return true;
-    }
-    return {};
-}
 
-bool Irt5502::wait(int timeout)
-{
-    if (m_semaphore.tryAcquire(1, timeout)) {
-        if (checkParcel())
-            return true;
-        else
-            emit message("Ошибка контрольной суммы");
-    } else {
-        emit message("Превышено время ожидания");
-    }
-    return {};
+    PortOpener po(policy == PortPolicy::CloseAfterExchange ? this : nullptr);
+    bool success = isConnected() && writeHex<Cmd::WritePar>(Write, Par::Enable, Semicolon {}, run);
+    return success;
+    //    if (isConnected()) {
+    //        emit write(createParcel(address, Cmd::WritePar,
+    //            Hex(Write), SkipSemicolon {}, Hex(Par::Enable),
+    //            Hex(run)));
+    //        if (wait() && success())
+    //            return true;
+    //    }
+    //    return {};
 }

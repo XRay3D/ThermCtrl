@@ -1,10 +1,8 @@
 #pragma once
 
 #include <QtSerialPort>
-#include <ascii_device.h>
 #include <commoninterfaces.h>
-
-class IrtPort;
+#include <ed_device.h>
 
 class Irt5502 final : public Elemer::AsciiDevice {
     Q_OBJECT
@@ -13,7 +11,6 @@ public:
     Irt5502(QObject* parent = nullptr);
 
     Elemer::DeviceType type() const override { return Elemer::IRT5502; };
-
 
     bool setSetPoint(float val);
     bool getMasuredValue();

@@ -4,13 +4,15 @@
 #include <commoninterfaces.h>
 #include <ed_device.h>
 
-class Irt5502 final : public Elemer::AsciiDevice {
+class IrtPort;
+
+class Irt5502 final : public Elemer::Device {
     Q_OBJECT
 
 public:
     Irt5502(QObject* parent = nullptr);
 
-    Elemer::DeviceType type() const override { return Elemer::IRT5502; };
+    Elemer::DeviceType type() const override { return Elemer::IRT_5502; };
 
     bool setSetPoint(float val);
     bool getMasuredValue();
@@ -20,35 +22,28 @@ signals:
     void measuredValue(double);
 
 private:
-    bool wait(int timeout = 1000);
+    //    enum class Cmd : uint8_t {
+    //        GetType = 0,
+    //        GetData = 1,
 
-    int devType {};
-    int address {};
-    double val { 25.0 };
-    double set { 1 };
+    //        GetProtocolType = 32,
+    //        SetDevAddress = 33,
+    //        SetDevSpeed = 34,
 
-    enum class Cmd : uint8_t {
-        GetType = 0,
-        GetData = 1,
+    //        ReadPar = 37,
+    //        WritePar = 38,
+    //        ModifPar = 39,
 
-        GetProtocolType = 32,
-        SetDevAddress = 33,
-        SetDevSpeed = 34,
+    //        FOpen = 40,
+    //        FSeek = 41,
+    //        FRead = 42,
+    //        FWrite = 43,
+    //        FClose = 44,
 
-        ReadPar = 37,
-        WritePar = 38,
-        ModifPar = 39,
+    //        GetVer = 0XFE,
 
-        FOpen = 40,
-        FSeek = 41,
-        FRead = 42,
-        FWrite = 43,
-        FClose = 44,
-
-        GetVer = 0XFE,
-
-        ResetCpu = 0XFF
-    };
+    //        ResetCpu = 0XFF
+    //    };
 
     enum class Par : uint16_t {
         SetPoint = 0x66DA,
@@ -56,7 +51,7 @@ private:
         Enable = 0x65DA,
     };
 
-    enum : uint8_t {
+    enum WR : uint8_t {
         Read,
         Write,
     };

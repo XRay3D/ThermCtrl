@@ -20,7 +20,7 @@ struct MyItemDelegate : QStyledItemDelegate {
     // QAbstractItemDelegate interface
     QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override
     {
-        if (!index.row()) {
+        if (!index.column()) {
             auto dsbx = new DoubleSpinBox(parent);
             dsbx->setRange(-999, +999);
             dsbx->setButtonSymbols(QAbstractSpinBox::NoButtons);
@@ -142,6 +142,7 @@ void MainWindow::loadSettings()
 
 void MainWindow::updateTableViewPointsHeight()
 {
+    return;
     auto sb = ui->twPoints->horizontalScrollBar();
     int height = ui->twPoints->horizontalHeader()->height()
         + ui->twPoints->rowHeight(0) * 3

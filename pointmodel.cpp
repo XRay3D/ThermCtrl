@@ -57,43 +57,43 @@ void PointModel::setPointCount(size_t count)
     if (m_data.size() == count) {
         return;
     } else if (m_setPointCount < count) {
-        beginInsertColumns({}, m_setPointCount, count - 1);
+        beginInsertRows({}, m_setPointCount, count - 1);
         m_setPointCount = count;
         if (m_data.size() < count)
             m_data.resize(count);
-        endInsertColumns();
+        endInsertRows();
     } else if (m_data.size() > count) {
-        beginRemoveColumns({}, count, m_setPointCount - 1);
+        beginRemoveRows({}, count, m_setPointCount - 1);
         m_setPointCount = count;
-        endRemoveColumns();
+        endRemoveRows();
     }
 }
 
-int PointModel::rowCount(const QModelIndex&) const { return Point::RowCount; }
+int PointModel::rowCount(const QModelIndex&) const { return m_setPointCount; }
 
-int PointModel::columnCount(const QModelIndex&) const { return m_setPointCount; }
+int PointModel::columnCount(const QModelIndex&) const { return  Point::RowCount; }
 
 QVariant PointModel::data(const QModelIndex& index, int role) const
 {
     if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
-        switch (index.row()) {
+        switch (index.column()) {
         case Point::Temp:
-            return m_data[index.column()].temp;
+            return m_data[index.row()].temp;
         case Point::Delay:
-            return m_data[index.column()].delayTime.toString("hч. mmм.");
+            return m_data[index.row()].delayTime.toString("hч. mmм.");
         case Point::Measure:
-            return m_data[index.column()].measureTime.toString("hч. mmм.");
+            return m_data[index.row()].measureTime.toString("hч. mmм.");
         }
     } else if (role == Qt::TextAlignmentRole) {
         return Qt::AlignCenter;
     } else if (role == Qt::EditRole) {
-        switch (index.row()) {
+        switch (index.column()) {
         case Point::Temp:
-            return m_data[index.column()].temp;
+            return m_data[index.row()].temp;
         case Point::Delay:
-            return m_data[index.column()].delayTime;
+            return m_data[index.row()].delayTime;
         case Point::Measure:
-            return m_data[index.column()].measureTime;
+            return m_data[index.row()].measureTime;
         }
     }
     return {};
@@ -102,15 +102,15 @@ QVariant PointModel::data(const QModelIndex& index, int role) const
 bool PointModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
     if (role == Qt::EditRole) {
-        switch (index.row()) {
+        switch (index.column()) {
         case Point::Temp:
-            m_data[index.column()].temp = value.toDouble();
+            m_data[index.row()].temp = value.toDouble();
             return true;
         case Point::Delay:
-            m_data[index.column()].delayTime = value.toTime();
+            m_data[index.row()].delayTime = value.toTime();
             return true;
         case Point::Measure:
-            m_data[index.column()].measureTime = value.toTime();
+            m_data[index.row()].measureTime = value.toTime();
             return true;
         }
     }
@@ -120,7 +120,7 @@ bool PointModel::setData(const QModelIndex& index, const QVariant& value, int ro
 QVariant PointModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole) {
-        if (orientation == Qt::Vertical) {
+        if (orientation == Qt::Horizontal) {
             static QString headerData[] { "Температура, ºC", "Задержка", "Измерение" };
             return headerData[section];
         } else {

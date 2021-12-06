@@ -60,14 +60,15 @@ MainWindow::MainWindow(QWidget* parent)
     connect(pIrt, &Irt5502::measuredValue, ui->chartView, &ChartView::addPoint);
     connect(this, &MainWindow::getValue, pIrt, &Irt5502::getMasuredValue);
 
-    // setup cmbxPort
+    // setup cbxPort
     auto ports { PortInfo::availablePorts().toVector() };
     std::ranges::sort(ports, {}, [](const PortInfo& pil) { return pil.portName().midRef(3).toInt(); });
-    for (auto& port : ports)
-        ui->cmbxPort->addItem(port.portName());
+    for (auto& port : ports) {
+        ui->cbxPort->addItem(port.portName(), port.serialNumber());
+    }
 
-    // setup cmbxDevice
-    ui->cmbxDevice->addItem("ИРТ5502");
+    // setup cbxDevice
+    ui->cbxDevice->addItem("ИРТ5502");
 
     // setup twPoints
     ui->twPoints->setModel(pPointModel);
@@ -111,7 +112,8 @@ void MainWindow::saveSettings()
     settings.beginGroup("MainWindow");
     settings.setValue("Geometry", saveGeometry());
     settings.setValue("State", saveState());
-    settings.setValue("Port", ui->cmbxPort->currentText());
+    settings.setValue("Port", ui->cbxPort->currentText());
+    settings.setValue("PortSn", ui->cbxPort->currentData());
     settings.setValue("Address", ui->sbxAddress->value());
     settings.setValue("Points", ui->sbxPoints->value());
     settings.setValue("SetPoint", ui->dsbxReadTemp->value());
@@ -129,7 +131,15 @@ void MainWindow::loadSettings()
     settings.beginGroup("MainWindow");
     restoreGeometry(settings.value("Geometry").toByteArray());
     restoreState(settings.value("State").toByteArray());
-    ui->cmbxPort->setCurrentText(settings.value("Port").toString());
+    if (auto sn { settings.value("PortSn").toString() }; sn.isEmpty())
+        ui->cbxPort->setCurrentText(settings.value("Port").toString());
+    else {
+        for (int i {}; i < ui->cbxPort->count(); ++i)
+            if (ui->cbxPort->itemData(i).toString() == sn) {
+                ui->cbxPort->setCurrentIndex(i);
+                break;
+            }
+    }
     ui->sbxAddress->setValue(settings.value("Address", 1).toInt());
     ui->sbxPoints->setValue(settings.value("Points", 1).toInt());
     ui->dsbxSetPoint->setValue(settings.value("SetPoint", 25).toDouble());

@@ -90,7 +90,7 @@ MainWindow::MainWindow(QWidget* parent)
     });
 
     loadSettings();
-    on_pbtnFind_clicked();
+    on_pbFind_clicked();
 
     for (auto childs { findChildren<QPushButton*>() }; auto pb : childs) {
         pb->setIconSize({ 16, 16 });
@@ -167,7 +167,7 @@ void MainWindow::finded(bool found)
     ui->statusbar->showMessage(found ? "Термокамера найдена"
                                      : "Нет связи с термокамерой",
         1000);
-    ui->grbxAuto->setEnabled(found);
+    ui->pbtnAutoStartStop->setEnabled(found);
     ui->grbxMan->setEnabled(found);
     ui->grbxConnection->setEnabled(!found);
 }
@@ -184,11 +184,11 @@ void MainWindow::showEvent(QShowEvent* event)
     updateTableViewPointsHeight();
 }
 
-void MainWindow::on_pbtnFind_clicked()
+void MainWindow::on_pbFind_clicked()
 {
     qDebug() << __FUNCTION__;
     ui->statusbar->showMessage("Поиск термокамеры...", 1000);
-    finded(pIrt->ping(ui->cmbxPort->currentText(), 19200, ui->sbxAddress->value()));
+    finded(pIrt->ping(ui->cbxPort->currentText(), 19200, ui->sbxAddress->value()));
 }
 
 void MainWindow::on_pbtnAutoStartStop_clicked(bool checked)

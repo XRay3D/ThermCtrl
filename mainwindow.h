@@ -40,7 +40,7 @@ signals:
     void getValue();
 
 private slots:
-    void on_pbtnFind_clicked();
+    void on_pbFind_clicked();
 
     void on_pbtnAutoStartStop_clicked(bool checked = false);
 

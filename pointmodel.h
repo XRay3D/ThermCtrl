@@ -56,10 +56,14 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
+    int current() const;
+    void setCurrent(int newCurrent);
+
 signals:
     void message(const QString&, int = {});
 
 private:
     std::vector<Point> m_data;
     size_t m_setPointCount = 1;
+    int current_{};
 };

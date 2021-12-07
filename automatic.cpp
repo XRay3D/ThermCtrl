@@ -18,8 +18,9 @@ Automatic::~Automatic()
 void Automatic::run()
 {
     irt->setEnable(true);
-    for (auto& point : pointModel->data()) {
+    for (int current {}; auto& point : pointModel->data()) {
         irt->setSetPoint(point.temp);
+        pointModel->setCurrent(current++);
         timeTo = QDateTime::currentDateTime().addMSecs(point.delayTime.msecsSinceStartOfDay()).toSecsSinceEpoch();
         while (QDateTime::currentDateTime().toSecsSinceEpoch() < timeTo) {
             irt->getMasuredValue();

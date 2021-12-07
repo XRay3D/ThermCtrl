@@ -9,6 +9,7 @@
 //#define DataStream
 
 #ifdef TextStream
+#include <QColor>
 #include <QTextStream>
 inline QTextStream& operator>>(QTextStream& stream, QTime& time)
 {
@@ -71,7 +72,7 @@ void PointModel::setPointCount(size_t count)
 
 int PointModel::rowCount(const QModelIndex&) const { return m_setPointCount; }
 
-int PointModel::columnCount(const QModelIndex&) const { return  Point::RowCount; }
+int PointModel::columnCount(const QModelIndex&) const { return Point::RowCount; }
 
 QVariant PointModel::data(const QModelIndex& index, int role) const
 {
@@ -95,7 +96,8 @@ QVariant PointModel::data(const QModelIndex& index, int role) const
         case Point::Measure:
             return m_data[index.row()].measureTime;
         }
-    }
+    } else if (role == Qt::BackgroundColorRole && current_ == index.row())
+        return QColor(127, 255, 127);
     return {};
 }
 
@@ -135,6 +137,13 @@ QVariant PointModel::headerData(int section, Qt::Orientation orientation, int ro
 Qt::ItemFlags PointModel::flags(const QModelIndex&) const
 {
     return Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+}
+
+int PointModel::current() const { return current_; }
+
+void PointModel::setCurrent(int newCurrent)
+{
+    current_ = newCurrent;
 }
 
 void PointModel::save()

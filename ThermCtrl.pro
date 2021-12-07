@@ -10,7 +10,10 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 #CONFIG += c++17
 QMAKE_CXXFLAGS += /std:c++latest
 QMAKE_CXXFLAGS += /await
-DEFINES += __cpp_lib_coroutine
+DEFINES += \
+    __cpp_lib_coroutine \
+    EL_LOG=1 \
+#    FORCE_READ=1
 
 win32:RC_FILE = myapp.rc
 

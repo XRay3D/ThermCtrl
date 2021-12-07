@@ -76,6 +76,9 @@
             <widget class="QComboBox" name="cbxPort"/>
            </item>
            <item>
+            <widget class="QComboBox" name="cbxBaud"/>
+           </item>
+           <item>
             <widget class="QComboBox" name="cbxDevice"/>
            </item>
            <item>

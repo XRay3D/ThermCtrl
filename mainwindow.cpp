@@ -67,6 +67,15 @@ MainWindow::MainWindow(QWidget* parent)
         ui->cbxPort->addItem(port.portName(), port.serialNumber());
     }
 
+    ui->cbxBaud->addItems({ "1200",
+        "2400",
+        "4800",
+        "9600",
+        "19200",
+        "38400",
+        "57600",
+        "115200" });
+
     // setup cbxDevice
     ui->cbxDevice->addItem("ИРТ5502");
 
@@ -113,6 +122,7 @@ void MainWindow::saveSettings()
     settings.setValue("Geometry", saveGeometry());
     settings.setValue("State", saveState());
     settings.setValue("Port", ui->cbxPort->currentText());
+    settings.setValue("Baud", ui->cbxBaud->currentText());
     settings.setValue("PortSn", ui->cbxPort->currentData());
     settings.setValue("Address", ui->sbxAddress->value());
     settings.setValue("Points", ui->sbxPoints->value());
@@ -140,6 +150,7 @@ void MainWindow::loadSettings()
                 break;
             }
     }
+    ui->cbxBaud->setCurrentText(settings.value("Baud", "9600").toString());
     ui->sbxAddress->setValue(settings.value("Address", 1).toInt());
     ui->sbxPoints->setValue(settings.value("Points", 1).toInt());
     ui->dsbxSetPoint->setValue(settings.value("SetPoint", 25).toDouble());
@@ -188,7 +199,7 @@ void MainWindow::on_pbFind_clicked()
 {
     qDebug() << __FUNCTION__;
     ui->statusbar->showMessage("Поиск термокамеры...", 1000);
-    finded(pIrt->ping(ui->cbxPort->currentText(), 19200, ui->sbxAddress->value()));
+    finded(pIrt->ping(ui->cbxPort->currentText(), ui->cbxBaud->currentText().toUInt(), ui->sbxAddress->value()));
 }
 
 void MainWindow::on_pbtnAutoStartStop_clicked(bool checked)

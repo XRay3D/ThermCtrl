@@ -6,12 +6,10 @@
 
 struct Point {
     double temp { 25.0 };
-    QTime delayTime { 0, 30 };
-    QTime measureTime { 0, 30 };
+    QTime time { 0, 30 };
     enum {
         Temp,
-        Delay,
-        Measure,
+        Time,
         RowCount,
     };
 };

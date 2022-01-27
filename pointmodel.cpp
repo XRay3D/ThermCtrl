@@ -11,48 +11,41 @@
 #ifdef TextStream
 #include <QColor>
 #include <QTextStream>
-inline QTextStream& operator>>(QTextStream& stream, QTime& time)
-{
+inline QTextStream& operator>>(QTextStream& stream, QTime& time) {
     QString str;
     stream >> str;
     time = QTime::fromString(str, "hh:mm");
     return stream;
 }
 
-inline QTextStream& operator<<(QTextStream& stream, const QTime& time)
-{
+inline QTextStream& operator<<(QTextStream& stream, const QTime& time) {
     stream << time.toString("hh:mm");
     return stream;
 }
 #elif defined(DataStream)
 #include <QDataStream>
-inline QDataStream& operator>>(QDataStream& stream, Point& point)
-{
-    stream >> point.temp >> point.delayTime >> point.measureTime;
+inline QDataStream& operator>>(QDataStream& stream, Point& point) {
+    stream >> point.temp >> point.time >> point.measureTime;
     return stream;
 }
 
-inline QDataStream& operator<<(QDataStream& stream, const Point& point)
-{
-    stream << point.temp << point.delayTime << point.measureTime;
+inline QDataStream& operator<<(QDataStream& stream, const Point& point) {
+    stream << point.temp << point.time << point.measureTime;
     return stream;
 }
 #endif
 
 PointModel::PointModel(QObject* parent)
     : QAbstractTableModel(parent)
-    , m_data { {} }
-{
+    , m_data { {} } {
     load();
 }
 
-PointModel::~PointModel()
-{
+PointModel::~PointModel() {
     save();
 }
 
-void PointModel::setPointCount(size_t count)
-{
+void PointModel::setPointCount(size_t count) {
     static QMutex m;
     QMutexLocker lok(&m);
     if (m_data.size() == count) {
@@ -74,56 +67,50 @@ int PointModel::rowCount(const QModelIndex&) const { return m_setPointCount; }
 
 int PointModel::columnCount(const QModelIndex&) const { return Point::RowCount; }
 
-QVariant PointModel::data(const QModelIndex& index, int role) const
-{
+QVariant PointModel::data(const QModelIndex& index, int role) const {
     if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
         switch (index.column()) {
         case Point::Temp:
             return m_data[index.row()].temp;
-        case Point::Delay:
-            return m_data[index.row()].delayTime.toString("hч. mmм.");
-        case Point::Measure:
-            return m_data[index.row()].measureTime.toString("hч. mmм.");
-        }
+        case Point::Time:
+            return m_data[index.row()].time.toString("hч. mmм.");
+         }
     } else if (role == Qt::TextAlignmentRole) {
         return Qt::AlignCenter;
     } else if (role == Qt::EditRole) {
         switch (index.column()) {
         case Point::Temp:
             return m_data[index.row()].temp;
-        case Point::Delay:
-            return m_data[index.row()].delayTime;
-        case Point::Measure:
-            return m_data[index.row()].measureTime;
+        case Point::Time:
+            return m_data[index.row()].time;
+
         }
     } else if (role == Qt::BackgroundColorRole && current_ == index.row())
         return QColor(127, 255, 127);
     return {};
 }
 
-bool PointModel::setData(const QModelIndex& index, const QVariant& value, int role)
-{
+bool PointModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if (role == Qt::EditRole) {
         switch (index.column()) {
         case Point::Temp:
             m_data[index.row()].temp = value.toDouble();
             return true;
-        case Point::Delay:
-            m_data[index.row()].delayTime = value.toTime();
-            return true;
-        case Point::Measure:
-            m_data[index.row()].measureTime = value.toTime();
+        case Point::Time:
+            m_data[index.row()].time = value.toTime();
             return true;
         }
     }
     return {};
 }
 
-QVariant PointModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
+QVariant PointModel::headerData(int section, Qt::Orientation orientation, int role) const {
     if (role == Qt::DisplayRole) {
         if (orientation == Qt::Horizontal) {
-            static QString headerData[] { "Температура, ºC", "Задержка", "Измерение" };
+            static QString headerData[] {
+                "Температура, ºC",
+                "Время",
+            };
             return headerData[section];
         } else {
             return QString("T%1").arg(++section);
@@ -134,29 +121,25 @@ QVariant PointModel::headerData(int section, Qt::Orientation orientation, int ro
     return {};
 }
 
-Qt::ItemFlags PointModel::flags(const QModelIndex&) const
-{
+Qt::ItemFlags PointModel::flags(const QModelIndex&) const {
     return Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
 int PointModel::current() const { return current_; }
 
-void PointModel::setCurrent(int newCurrent)
-{
+void PointModel::setCurrent(int newCurrent) {
     current_ = newCurrent;
 }
 
-void PointModel::save()
-{
+void PointModel::save() {
 #ifdef TextStream
     QFile file("data.txt");
     if (file.open(QFile::WriteOnly)) {
         QTextStream outStr(&file);
         outStr << m_data.size() << '\n';
-        for (auto& [t, d, m] : m_data) {
-            outStr << t << '\n';
-            outStr << d << '\n';
-            outStr << m << '\n';
+        for (auto& [time, temp] : m_data) {
+            outStr << time << '\n';
+            outStr << temp << '\n';
         }
     }
 #elif defined(DataStream)
@@ -171,8 +154,7 @@ void PointModel::save()
     }
 }
 
-void PointModel::load()
-{
+void PointModel::load() {
     enum { TimeOut = 3000 };
 #ifdef TextStream
     QFile file("data.txt");
@@ -181,10 +163,9 @@ void PointModel::load()
         int size;
         inStr >> size;
         m_data.resize(size);
-        for (auto& [t, d, m] : m_data) {
-            inStr >> t;
-            inStr >> d;
-            inStr >> m;
+        for (auto& [time, temp] : m_data) {
+            inStr >> time;
+            inStr >> temp;
         }
         emit message("Файл точек \"data.txt\"загружен.", TimeOut);
     }
@@ -201,7 +182,6 @@ void PointModel::load()
     }
 }
 
-Point PointModel::point(size_t idx) const
-{
+Point PointModel::point(size_t idx) const {
     return m_data[std::clamp(idx, {}, m_data.size() - 1)];
 }

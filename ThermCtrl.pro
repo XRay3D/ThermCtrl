@@ -27,7 +27,8 @@ SOURCES += \
     irt5502.cpp \
     main.cpp \
     mainwindow.cpp \
-    pointmodel.cpp
+    pointmodel.cpp \
+    thermctrl.cpp
 
 HEADERS += \
     automatic.h \
@@ -36,10 +37,12 @@ HEADERS += \
     irt5502.h \
     mainwindow.h \
     pointmodel.h \
+    thermctrl.h \
     version.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    thermctrl.ui
 
 DEFINES += \
 #    EL_EMU \           #Эмуляция работы с устройством

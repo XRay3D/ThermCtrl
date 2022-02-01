@@ -21,8 +21,7 @@ public:
     VectorView() = default;
     VectorView(const std::vector<T, A>& vec, size_t count)
         : m_begin(vec.cbegin())
-        , m_end(vec.cbegin() + count)
-    {
+        , m_end(vec.cbegin() + count) {
     }
     auto begin() const { return m_begin; }
     auto end() const { return m_end; }
@@ -38,11 +37,18 @@ public:
     explicit PointModel(QObject* parent = nullptr);
     ~PointModel() override;
 
-    void setPointCount(size_t count);
-    void save();
-    void load();
+    void setCount(size_t count);
+    int count() const { return count_; }
+
+    void setCurrent(int newCurrent) { current_ = newCurrent; }
+    int current() const { return current_; }
+
+    void save(const QString& name);
+    void load(const QString& name);
+    QString name() const { return name_; }
+
     Point point(size_t idx) const;
-    auto data() { return VectorView(m_data, m_setPointCount); }
+    auto data() { return VectorView(data_, count_); }
 
     // QAbstractItemModel interface
     int rowCount(const QModelIndex& = {}) const override;
@@ -54,14 +60,12 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
-    int current() const;
-    void setCurrent(int newCurrent);
-
 signals:
     void message(const QString&, int = {});
 
 private:
-    std::vector<Point> m_data;
-    size_t m_setPointCount = 1;
-    int current_{};
+    QString name_;
+    std::vector<Point> data_;
+    size_t count_ { 1 };
+    int current_ {};
 };

@@ -22,19 +22,19 @@ ChartView::ChartView(QWidget* parent)
 
     pLineSeries->attachAxis(pAxisX);
     pLineSeries->attachAxis(pAxisY);
-    pLineSeries->setPen(QPen(Qt::black, 0.0));
+    pLineSeries->setPen(QPen(Qt::black, 2.0));
     //pLineSeries->setUseOpenGL(true); // отключант анимацию
 
     pChart->legend()->hide();
     pChart->setMargins({});
     pChart->setTitle("Температура в камере");
-    pChart->setAnimationOptions(QChart::SeriesAnimations);
-    pChart->setAnimationDuration(2222);
-    pChart->setAnimationEasingCurve(QEasingCurve::Linear);
+    //    pChart->setAnimationOptions(QChart::SeriesAnimations);
+    //    pChart->setAnimationDuration(2222);
+    //    pChart->setAnimationEasingCurve(QEasingCurve::Linear);
 
     setChart(pChart);
 
-    //    setRenderHint(QPainter::Antialiasing);
+    setRenderHint(QPainter::Antialiasing);
     setRubberBand(QChartView::RectangleRubberBand);
     pChart->layout()->setContentsMargins(0, 0, 0, 0);
 }

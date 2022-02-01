@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QTextEdit>
 #include <QThread>
 #include <set>
 
@@ -15,6 +16,7 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
+    static inline QTextEdit* teLog{};
 
 private:
     Ui::MainWindow* ui;

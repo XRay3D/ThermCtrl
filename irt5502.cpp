@@ -25,33 +25,32 @@ struct AllData {
 #pragma pack(pop)
 
 Irt5502::Irt5502(QObject* parent)
-    : Elemer::Device(parent)
-{
+    : Elemer::Device(parent) {
 }
 
-bool Irt5502::setSetPoint(float val)
-{
-    QMutexLocker locker(&m_mutex);
-    PortOpener po(policy == PortPolicy::AlwaysOpen ? nullptr : this);
+bool Irt5502::setSetPoint(float val) {
+    QMutexLocker locker(&mutex_);
+    Policy(this);
     bool success = isConnected() && writeHex<ParamCmd::Write>(Write, Par::SetPoint, Semicolon {}, val) == 0;
     return success;
 }
 
-bool Irt5502::getMasuredValue()
-{
-    QMutexLocker locker(&m_mutex);
-    PortOpener po(policy == PortPolicy::AlwaysOpen ? nullptr : this);
+bool Irt5502::getMasuredValue(float* val) {
+    QMutexLocker locker(&mutex_);
+    Policy(this);
     AllData all;
     bool success = isConnected() && writeHex<ParamCmd::Read>(Read, Par::All) == 0 && readHex(all);
-    if (success)
+    if (success) {
+        if (val)
+            *val = all.ch1val;
         emit measuredValue(all.ch1val);
+    }
     return success;
 }
 
-bool Irt5502::setEnable(bool run)
-{
-    QMutexLocker locker(&m_mutex);
-    PortOpener po(policy == PortPolicy::AlwaysOpen ? nullptr : this);
+bool Irt5502::setEnable(bool run) {
+    QMutexLocker locker(&mutex_);
+    Policy(this);
     bool success = isConnected() && writeHex<ParamCmd::Write>(Write, Par::Enable, Semicolon {}, run) == 0;
     return success;
 }

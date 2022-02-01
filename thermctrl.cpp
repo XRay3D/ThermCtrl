@@ -4,6 +4,7 @@
 #include "pointmodel.h"
 #include "ui_thermctrl.h"
 
+#include <QFileDialog>
 #include <QMessageBox>
 #include <QScrollBar>
 #include <QStyledItemDelegate>
@@ -29,7 +30,7 @@ struct MyItemDelegate : QStyledItemDelegate {
             return dsbx;
         } else {
             auto timeEdit = static_cast<QTimeEdit*>(QStyledItemDelegate::createEditor(parent, option, index));
-            timeEdit->setDisplayFormat("hч. mmм.");
+            timeEdit->setDisplayFormat("hч. mmмин.");
             timeEdit->setButtonSymbols(QAbstractSpinBox::NoButtons);
             timeEdit->setAlignment(Qt::AlignCenter);
             return timeEdit;
@@ -37,57 +38,38 @@ struct MyItemDelegate : QStyledItemDelegate {
     }
 };
 
-ThermCtrl::ThermCtrl(const QString& portName, QWidget* parent)
+ThermCtrl::ThermCtrl(Irt5502*& irt, QWidget* parent)
     : QWidget(parent)
     , ui { new Ui::ThermCtrl }
-    , pIrt { new Irt5502() }
-    , pPointModel { new PointModel(this) }
-    , pAutomatic { new Automatic(pIrt, pPointModel) } {
+    , irt_ { irt }
+    , pointModel { new PointModel(this) }
+    , automatic { new Automatic(irt_, pointModel) } {
+    irt = nullptr;
+    Elemer::Timer t(__FUNCTION__);
     ui->setupUi(this);
 
     for (auto childs { findChildren<QPushButton*>() }; auto pb : childs)
         pb->setIconSize({ 16, 16 });
 
-    pIrt->moveToThread(&irtThread);
-    connect(&irtThread, &QThread::finished, pIrt, &QObject::deleteLater);
+    irt_->moveToThread(&irtThread);
+    connect(&irtThread, &QThread::finished, irt_, &QObject::deleteLater);
     irtThread.start();
 
-    // connect pIrt
-    //    connect(pIrt, &Irt5502::message, ui->statusbar, &QStatusBar::showMessage);
-    connect(pIrt, &Irt5502::measuredValue, ui->dsbxReadTemp, &QDoubleSpinBox::setValue);
-    connect(pIrt, &Irt5502::measuredValue, ui->chartView, &ChartView::addPoint);
-    connect(this, &ThermCtrl::getValue, pIrt, &Irt5502::getMasuredValue);
-
-    // setup cbxPort
-    auto ports { PortInfo::availablePorts().toVector() };
-    std::ranges::sort(ports, {}, [](const PortInfo& pil) { return pil.portName().midRef(3).toInt(); });
-    for (auto& port : ports) {
-        ui->cbxPort->addItem(port.portName(), port.serialNumber());
-    }
-
-    ui->cbxBaud->addItems({ "1200",
-        "2400",
-        "4800",
-        "9600",
-        "19200",
-        "38400",
-        "57600",
-        "115200" });
-
-    // setup cbxDevice
-    ui->cbxDevice->addItem("ИРТ5502");
+    connect(irt_, &Irt5502::message, this, &ThermCtrl::showMessage);
+    connect(irt_, &Irt5502::measuredValue, ui->dsbxReadTemp, &QDoubleSpinBox::setValue);
+    connect(irt_, &Irt5502::measuredValue, ui->chartView, &ChartView::addPoint);
+    connect(this, &ThermCtrl::getValue, irt_, &Irt5502::getMasuredValue);
 
     // setup twPoints
-    ui->twPoints->setModel(pPointModel);
+    ui->twPoints->setModel(pointModel);
     ui->twPoints->horizontalHeader()->setDefaultSectionSize(ColumnWidth);
     ui->twPoints->horizontalHeader()->setMinimumSectionSize(ColumnWidth);
     ui->twPoints->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->twPoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->twPoints->setItemDelegate(new MyItemDelegate(ui->twPoints)); // подтюнил для красоты
 
-    // connect pPointModel
-    // connect(pPointModel, &PointModel::message, ui->statusbar, &QStatusBar::showMessage);
-    connect(ui->sbxPoints, qOverload<int>(&QSpinBox::valueChanged), pPointModel, &PointModel::setPointCount);
+    connect(pointModel, &PointModel::message, this, &ThermCtrl::showMessage);
+    connect(ui->sbxPoints, qOverload<int>(&QSpinBox::valueChanged), pointModel, &PointModel::setCount);
     connect(ui->sbxPoints, qOverload<int>(&QSpinBox::valueChanged), [this] {
         QTimer::singleShot(1, [this] { //задержка ожидания обновления модели
             auto hsbv = ui->twPoints->horizontalScrollBar()->isVisible();
@@ -97,16 +79,12 @@ ThermCtrl::ThermCtrl(const QString& portName, QWidget* parent)
     });
 
     loadSettings();
-
-    ui->cbxPort->setCurrentText(portName);
-
-    on_pbFind_clicked();
 }
 
 ThermCtrl::~ThermCtrl() {
+    saveSettings();
     irtThread.quit();
     irtThread.wait();
-    saveSettings();
     delete ui;
 }
 
@@ -114,16 +92,13 @@ void ThermCtrl::saveSettings() {
     QSettings settings;
 
     settings.beginGroup("ThermCtrl");
-    settings.setValue("Port", ui->cbxPort->currentText());
-    settings.setValue("Baud", ui->cbxBaud->currentText());
-    settings.setValue("PortSn", ui->cbxPort->currentData());
-    settings.setValue("Address", ui->sbxAddress->value());
     settings.setValue("Points", ui->sbxPoints->value());
     settings.setValue("SetPoint", ui->dsbxReadTemp->value());
+    settings.setValue("splitterSizes", ui->splitter->saveState());
     settings.endGroup();
 
-    settings.beginGroup("Splitter");
-    settings.setValue("State", ui->splitter->saveState());
+    settings.beginGroup(irt_->port()->portName());
+    settings.setValue("pointData", pointModel->name());
     settings.endGroup();
 }
 
@@ -131,23 +106,14 @@ void ThermCtrl::loadSettings() {
     QSettings settings;
 
     settings.beginGroup("ThermCtrl");
-    if (auto sn { settings.value("PortSn").toString() }; sn.isEmpty())
-        ui->cbxPort->setCurrentText(settings.value("Port").toString());
-    else {
-        for (int i {}; i < ui->cbxPort->count(); ++i)
-            if (ui->cbxPort->itemData(i).toString() == sn) {
-                ui->cbxPort->setCurrentIndex(i);
-                break;
-            }
-    }
-    ui->cbxBaud->setCurrentText(settings.value("Baud", "9600").toString());
-    ui->sbxAddress->setValue(settings.value("Address", 1).toInt());
     ui->sbxPoints->setValue(settings.value("Points", 1).toInt());
     ui->dsbxSetPoint->setValue(settings.value("SetPoint", 25).toDouble());
+    ui->splitter->restoreState(settings.value("splitterSizes").toByteArray());
     settings.endGroup();
 
-    settings.beginGroup("Splitter");
-    ui->splitter->restoreState(settings.value("State").toByteArray());
+    settings.beginGroup(irt_->port()->portName());
+    pointModel->load(settings.value("pointData", irt_->port()->portName() + ".json").toString());
+    ui->sbxPoints->setValue(pointModel->count());
     settings.endGroup();
 }
 
@@ -162,18 +128,21 @@ void ThermCtrl::updateTableViewPointsHeight() {
     ui->twPoints->setMaximumHeight(height);
 }
 
-void ThermCtrl::finded(bool found) {
-    emit showMessage(found ? "Термокамера найдена"
-                           : "Нет связи с термокамерой",
-        1000);
-    ui->pbtnAutoStartStop->setEnabled(found);
-    ui->grbxMan->setEnabled(found);
-    ui->grbxConnection->setEnabled(!found);
+void ThermCtrl::finished() {
+    on_pbAutoStartStop_clicked();
+    QMessageBox::information(this, "", "Время вышло.");
 }
 
-void ThermCtrl::finished() {
-    on_pbtnAutoStartStop_clicked();
-    QMessageBox::information(this, "", "Время вышло.");
+void ThermCtrl::checkConnection() {
+    while (!irt_->isConnected()
+        && QMessageBox::warning(this,
+               irt_->port()->portName(),
+               "",
+               QMessageBox::Retry,
+               QMessageBox::Cancel)
+            == QMessageBox::Retry) {
+        irt_->ping({}, {}, 1);
+    }
 }
 
 void ThermCtrl::showEvent(QShowEvent* event) {
@@ -181,74 +150,70 @@ void ThermCtrl::showEvent(QShowEvent* event) {
     updateTableViewPointsHeight();
 }
 
-void ThermCtrl::on_pbFind_clicked() {
-    qDebug() << __FUNCTION__;
-    emit showMessage("Поиск термокамеры...", 1000);
-    finded(pIrt->ping(ui->cbxPort->currentText(), ui->cbxBaud->currentText().toUInt(), ui->sbxAddress->value()));
-}
-
-void ThermCtrl::on_pbtnAutoStartStop_clicked(bool checked) {
-    if (checked) { // проверка
-        int time {};
-        for (auto& point : pPointModel->data()) {
-            time += point.time.msecsSinceStartOfDay();
-        }
-        if (!time) {
-            QMessageBox::information(this, "", "Нулевое время во всех ячейках таблицы.");
-            ui->pbtnAutoStartStop->setChecked(false);
-            return;
-        }
-    }
-
-    if (pIrt->isConnected()) {
+void ThermCtrl::on_pbAutoStartStop_clicked(bool checked) {
+    checkConnection();
+    if (irt_->isConnected()) {
         if (checked) {
+            int time {};
+            for (auto& point : pointModel->data()) {
+                time += point.time.msecsSinceStartOfDay();
+            }
+            if (!time) {
+                QMessageBox::information(this, "", "Нулевое время во всех ячейках таблицы.");
+                ui->pbAutoStartStop->setChecked(false);
+                return;
+            }
             // connect pAutomatic
-            connect(pAutomatic, &QThread::finished, this, &ThermCtrl::finished);
+            connect(automatic, &QThread::finished, this, &ThermCtrl::finished);
             ui->chartView->reset(); // чистка графика
-            pAutomatic->start();    // запуск потока
-            ui->pbtnAutoStartStop->setText("Стоп");
+            automatic->start();     // запуск потока
+            ui->pbAutoStartStop->setText("Стоп");
         } else {
             // disconnect pAutomatic
-            pAutomatic->disconnect();
-            if (pAutomatic->isRunning()) {
-                pAutomatic->requestInterruption(); // остановка потока
-                pAutomatic->wait();
+            automatic->disconnect();
+            if (automatic->isRunning()) {
+                automatic->requestInterruption(); // остановка потока
+                automatic->wait();
             }
-            ui->pbtnAutoStartStop->setText("Старт");
+            ui->pbAutoStartStop->setText("Старт");
         }
-        ui->grbxConnection->setEnabled(!checked);
+        //        ui->grbxConnection->setEnabled(!checked);
         ui->grbxMan->setEnabled(!checked);
         ui->sbxPoints->setEnabled(!checked);
         ui->twPoints->setEnabled(!checked);
+        ui->pbLoad->setEnabled(!checked);
+        ui->pbSave->setEnabled(!checked);
     } else {
         checked = false;
-        finded(false);
     }
     QIcon icon1(QString::fromUtf8(checked ? ":/res/media-playback-stop.svg"
                                           : ":/res/media-playback-start.svg"));
-    ui->pbtnAutoStartStop->setIcon(icon1);
-    ui->pbtnAutoStartStop->setChecked(checked);
+    ui->pbAutoStartStop->setIcon(icon1);
+    ui->pbAutoStartStop->setChecked(checked);
 }
 
-void ThermCtrl::on_pbtnManReadTemp_clicked() {
-    if (pIrt->getMasuredValue()) {
+void ThermCtrl::on_pbManReadTemp_clicked() {
+    checkConnection();
+    if (irt_->getMasuredValue())
         emit showMessage("Чтение температуры");
-    } else
-        finded(false);
 }
 
-void ThermCtrl::on_pbtnManStart_clicked() {
-    if (pIrt->setSetPoint(ui->dsbxSetPoint->value()) && pIrt->setEnable(true)) {
+void ThermCtrl::on_pbManStart_clicked() {
+    checkConnection();
+    if (irt_->setSetPoint(ui->dsbxSetPoint->value()) && irt_->setEnable(true))
         emit showMessage("Камера включена");
-    } else {
-        finded(false);
-    }
 }
 
-void ThermCtrl::on_pbtnManStop_clicked() {
-    if (pIrt->setEnable(false)) {
+void ThermCtrl::on_pbManStop_clicked() {
+    checkConnection();
+    if (irt_->setEnable(false))
         emit showMessage("Камера остановлена");
-    } else {
-        finded(false);
-    }
+}
+
+void ThermCtrl::on_pbSave_clicked() {
+    pointModel->save(QFileDialog::getSaveFileName(this, "Сохранить точки", pointModel->name(), "JSON (*.json)"));
+}
+
+void ThermCtrl::on_pbLoad_clicked() {
+    pointModel->load(QFileDialog::getOpenFileName(this, "Загрузить точки", pointModel->name(), "JSON (*.json)"));
 }

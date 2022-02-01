@@ -1,10 +1,11 @@
 #pragma once
 
+#include "irt5502.h"
+
 #include <QThread>
 #include <QWidget>
 
 class Automatic;
-class Irt5502;
 class PointModel;
 namespace Ui {
     class ThermCtrl;
@@ -14,37 +15,36 @@ class ThermCtrl : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ThermCtrl(const QString &portName, QWidget* parent = nullptr);
+    explicit ThermCtrl(Irt5502*& irt, QWidget* parent = nullptr);
     ~ThermCtrl();
 
 private:
     Ui::ThermCtrl* ui;
 
-    Irt5502* pIrt {};
-    PointModel* pPointModel;
-
-    Automatic* pAutomatic {};
+    Irt5502* const irt_;
+    PointModel* const pointModel;
+    Automatic* const automatic;
     QThread irtThread;
 
     void saveSettings();
     void loadSettings();
 
     void updateTableViewPointsHeight();
-    void finded(bool found);
     void finished();
+    void checkConnection();
 
 signals:
-    void getValue();
+    void getValue(float* = {});
     void showMessage(const QString&, int = 0);
 
 private slots:
-    void on_pbFind_clicked();
+    void on_pbAutoStartStop_clicked(bool checked = false);
+    void on_pbManReadTemp_clicked();
+    void on_pbManStart_clicked();
+    void on_pbManStop_clicked();
 
-    void on_pbtnAutoStartStop_clicked(bool checked = false);
-
-    void on_pbtnManReadTemp_clicked();
-    void on_pbtnManStart_clicked();
-    void on_pbtnManStop_clicked();
+    void on_pbSave_clicked();
+    void on_pbLoad_clicked();
 
 protected:
     // QWidget interface

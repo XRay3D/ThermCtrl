@@ -18,23 +18,23 @@ void Automatic::run() {
     for (int current {}; auto& point : pointModel->data()) {
         irt->setSetPoint(point.temp);
         pointModel->setCurrent(current++);
+        float val {};
 
-        while (abs(irt->getMasuredValue() - point.temp) > 1.0) {
-            if (isInterruptionRequested()) {
+        do {
+            if (!irt->getMasuredValue(&val) || isInterruptionRequested()) {
                 irt->setEnable(false);
                 return;
             }
             msleep(2000);
-        }
+        } while (abs(val - point.temp) > 0.2);
 
         timeTo = QDateTime::currentDateTime().addMSecs(point.time.msecsSinceStartOfDay());
         while (QDateTime::currentDateTime() < timeTo) {
-            irt->getMasuredValue();
-            msleep(2000);
-            if (isInterruptionRequested()) {
+            if (!irt->getMasuredValue(&val) || isInterruptionRequested()) {
                 irt->setEnable(false);
                 return;
             }
+            msleep(2000);
         }
     }
     irt->setEnable(false);

@@ -18,10 +18,19 @@ void Automatic::run() {
     for (int current {}; auto& point : pointModel->data()) {
         irt->setSetPoint(point.temp);
         pointModel->setCurrent(current++);
-        timeTo = QDateTime::currentDateTime().addMSecs(point.time.msecsSinceStartOfDay()).toSecsSinceEpoch();
-        while (QDateTime::currentDateTime().toSecsSinceEpoch() < timeTo) {
+
+        while (abs(irt->getMasuredValue() - point.temp) > 1.0) {
+            if (isInterruptionRequested()) {
+                irt->setEnable(false);
+                return;
+            }
+            msleep(2000);
+        }
+
+        timeTo = QDateTime::currentDateTime().addMSecs(point.time.msecsSinceStartOfDay());
+        while (QDateTime::currentDateTime() < timeTo) {
             irt->getMasuredValue();
-            msleep(500);
+            msleep(2000);
             if (isInterruptionRequested()) {
                 irt->setEnable(false);
                 return;

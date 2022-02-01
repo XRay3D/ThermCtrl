@@ -1,6 +1,7 @@
 QT       += core gui serialport charts
 
 DESTDIR = $$_PRO_FILE_PWD_/bin
+CONFIG += console
 
 include(ElemerDevice/ElemerDevice.pri)
 include(CommonInterfaces/CommonInterfaces.pri)

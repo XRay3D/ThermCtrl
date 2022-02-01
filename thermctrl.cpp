@@ -37,13 +37,16 @@ struct MyItemDelegate : QStyledItemDelegate {
     }
 };
 
-ThermCtrl::ThermCtrl(QWidget* parent)
+ThermCtrl::ThermCtrl(const QString& portName, QWidget* parent)
     : QWidget(parent)
     , ui { new Ui::ThermCtrl }
     , pIrt { new Irt5502() }
     , pPointModel { new PointModel(this) }
     , pAutomatic { new Automatic(pIrt, pPointModel) } {
     ui->setupUi(this);
+
+    for (auto childs { findChildren<QPushButton*>() }; auto pb : childs)
+        pb->setIconSize({ 16, 16 });
 
     pIrt->moveToThread(&irtThread);
     connect(&irtThread, &QThread::finished, pIrt, &QObject::deleteLater);
@@ -94,11 +97,10 @@ ThermCtrl::ThermCtrl(QWidget* parent)
     });
 
     loadSettings();
-    on_pbFind_clicked();
 
-    for (auto childs { findChildren<QPushButton*>() }; auto pb : childs) {
-        pb->setIconSize({ 16, 16 });
-    }
+    ui->cbxPort->setCurrentText(portName);
+
+    on_pbFind_clicked();
 }
 
 ThermCtrl::~ThermCtrl() {
@@ -161,9 +163,9 @@ void ThermCtrl::updateTableViewPointsHeight() {
 }
 
 void ThermCtrl::finded(bool found) {
-    //    ui->statusbar->showMessage(found ? "Термокамера найдена"
-    //                                     : "Нет связи с термокамерой",
-    //        1000);
+    emit showMessage(found ? "Термокамера найдена"
+                           : "Нет связи с термокамерой",
+        1000);
     ui->pbtnAutoStartStop->setEnabled(found);
     ui->grbxMan->setEnabled(found);
     ui->grbxConnection->setEnabled(!found);
@@ -181,7 +183,7 @@ void ThermCtrl::showEvent(QShowEvent* event) {
 
 void ThermCtrl::on_pbFind_clicked() {
     qDebug() << __FUNCTION__;
-    //    ui->statusbar->showMessage("Поиск термокамеры...", 1000);
+    emit showMessage("Поиск термокамеры...", 1000);
     finded(pIrt->ping(ui->cbxPort->currentText(), ui->cbxBaud->currentText().toUInt(), ui->sbxAddress->value()));
 }
 
@@ -230,14 +232,14 @@ void ThermCtrl::on_pbtnAutoStartStop_clicked(bool checked) {
 
 void ThermCtrl::on_pbtnManReadTemp_clicked() {
     if (pIrt->getMasuredValue()) {
-        //        ui->statusbar->showMessage("Чтение температуры");
+        emit showMessage("Чтение температуры");
     } else
         finded(false);
 }
 
 void ThermCtrl::on_pbtnManStart_clicked() {
     if (pIrt->setSetPoint(ui->dsbxSetPoint->value()) && pIrt->setEnable(true)) {
-        //        ui->statusbar->showMessage("Камера включена");
+        emit showMessage("Камера включена");
     } else {
         finded(false);
     }
@@ -245,7 +247,7 @@ void ThermCtrl::on_pbtnManStart_clicked() {
 
 void ThermCtrl::on_pbtnManStop_clicked() {
     if (pIrt->setEnable(false)) {
-        //        ui->statusbar->showMessage("Камера остановлена");
+        emit showMessage("Камера остановлена");
     } else {
         finded(false);
     }

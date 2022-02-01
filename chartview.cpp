@@ -9,8 +9,7 @@ ChartView::ChartView(QWidget* parent)
     , pChart { new QChart }
     , pLineSeries { new QLineSeries /*QSplineSeries*/ (this) }
     , pAxisX { new QDateTimeAxis(this) }
-    , pAxisY { new QValueAxis(this) }
-{
+    , pAxisY { new QValueAxis(this) } {
     // setup chartView
     pAxisX->setFormat("h:mm:ss");
 
@@ -23,23 +22,24 @@ ChartView::ChartView(QWidget* parent)
 
     pLineSeries->attachAxis(pAxisX);
     pLineSeries->attachAxis(pAxisY);
+    pLineSeries->setPen(QPen(Qt::black, 0.0));
     //pLineSeries->setUseOpenGL(true); // отключант анимацию
 
     pChart->legend()->hide();
     pChart->setMargins({});
     pChart->setTitle("Температура в камере");
     pChart->setAnimationOptions(QChart::SeriesAnimations);
-    pChart->setAnimationDuration(550);
+    pChart->setAnimationDuration(2222);
     pChart->setAnimationEasingCurve(QEasingCurve::Linear);
 
     setChart(pChart);
 
-    setRenderHint(QPainter::Antialiasing);
+    //    setRenderHint(QPainter::Antialiasing);
     setRubberBand(QChartView::RectangleRubberBand);
+    pChart->layout()->setContentsMargins(0, 0, 0, 0);
 }
 
-void ChartView::addPoint(double yValue)
-{
+void ChartView::addPoint(double yValue) {
     maxX = QDateTime::currentDateTime();
     if (!pLineSeries->count()) {
         minY = maxY = yValue;
@@ -53,8 +53,7 @@ void ChartView::addPoint(double yValue)
     pAxisY->setRange(minY, maxY);
 }
 
-void ChartView::reset()
-{
+void ChartView::reset() {
     minY = maxY = {};
     minX = maxX = {};
     pLineSeries->clear();
@@ -62,8 +61,7 @@ void ChartView::reset()
     pAxisY->setRange(minY, maxY);
 }
 
-bool ChartView::viewportEvent(QEvent* event)
-{
+bool ChartView::viewportEvent(QEvent* event) {
     if (event->type() == QEvent::TouchBegin) {
         // By default touch events are converted to mouse events. So
         // after this event we will get a mouse event also but we want
@@ -78,22 +76,19 @@ bool ChartView::viewportEvent(QEvent* event)
     return QChartView::viewportEvent(event);
 }
 
-void ChartView::mousePressEvent(QMouseEvent* event)
-{
+void ChartView::mousePressEvent(QMouseEvent* event) {
     if (m_isTouching)
         return;
     QChartView::mousePressEvent(event);
 }
 
-void ChartView::mouseMoveEvent(QMouseEvent* event)
-{
+void ChartView::mouseMoveEvent(QMouseEvent* event) {
     if (m_isTouching)
         return;
     QChartView::mouseMoveEvent(event);
 }
 
-void ChartView::mouseReleaseEvent(QMouseEvent* event)
-{
+void ChartView::mouseReleaseEvent(QMouseEvent* event) {
     if (m_isTouching)
         m_isTouching = false;
 
@@ -104,8 +99,7 @@ void ChartView::mouseReleaseEvent(QMouseEvent* event)
     QChartView::mouseReleaseEvent(event);
 }
 
-void ChartView::keyPressEvent(QKeyEvent* event)
-{
+void ChartView::keyPressEvent(QKeyEvent* event) {
     switch (event->key()) {
     case Qt::Key_Plus:
         chart()->zoomIn();
@@ -131,8 +125,7 @@ void ChartView::keyPressEvent(QKeyEvent* event)
     }
 }
 
-void ChartView::mouseDoubleClickEvent(QMouseEvent* event)
-{
+void ChartView::mouseDoubleClickEvent(QMouseEvent* event) {
     QGraphicsView::mouseDoubleClickEvent(event);
     pAxisX->setRange(minX, maxX);
     pAxisY->setRange(minY, maxY);

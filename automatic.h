@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QDateTime>
 #include <QThread>
 
 class Irt5502;
@@ -11,7 +12,7 @@ class Automatic final : public QThread {
     Irt5502* irt;
     PointModel* pointModel;
 
-    qint64 timeTo;
+    QDateTime timeTo;
 
 public:
     explicit Automatic(Irt5502* irt, PointModel* pointModel, QObject* parent = nullptr);

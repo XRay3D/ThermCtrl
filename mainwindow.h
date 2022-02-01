@@ -2,10 +2,12 @@
 
 #include <QMainWindow>
 #include <QThread>
+#include <set>
 
 namespace Ui {
     class MainWindow;
 }
+class ThermCtrl;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -16,4 +18,8 @@ public:
 
 private:
     Ui::MainWindow* ui;
+
+    void searchForThermalChambers();
+
+    std::map<QString, ThermCtrl*> map;
 };

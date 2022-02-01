@@ -14,7 +14,7 @@ class ThermCtrl : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ThermCtrl(QWidget* parent = nullptr);
+    explicit ThermCtrl(const QString &portName, QWidget* parent = nullptr);
     ~ThermCtrl();
 
 private:
@@ -35,6 +35,7 @@ private:
 
 signals:
     void getValue();
+    void showMessage(const QString&, int = 0);
 
 private slots:
     void on_pbFind_clicked();

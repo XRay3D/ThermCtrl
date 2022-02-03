@@ -28,6 +28,8 @@ private:
     void searchForThermalChambers();
     void updateTabText(const QString& name);
     void setIcon(bool runing);
+    void showMessage(const QString &text, int timeout = 0);
+
 
     std::map<QString, ThermCtrl*> map;
     bool showEventSkip{};

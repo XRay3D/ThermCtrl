@@ -55,40 +55,30 @@ void MainWindow::searchForThermalChambers() {
     Irt5502* irt {};
 
     for (int i {}; auto& pi : availablePorts) {
+        progress.setValue(i++);
         Elemer::Timer t("availablePorts");
         qDebug() << "vendorIdentifier" << pi.vendorIdentifier();
         qDebug() << "portName" << pi.portName();
         qDebug() << "serialNumber" << pi.serialNumber();
 
-        if (0&&pi.vendorIdentifier() != 1027) {
-            progress.setValue(i++);
+#ifndef EL_EMU
+        if (pi.vendorIdentifier() != 1027)
             continue;
-        }
-
+#endif
         if (progress.wasCanceled())
             break;
+        if (map.contains(pi.portName()))
+            continue;
+
         irt = new Irt5502;
         if (irt->ping(pi.portName(), 19200, 1)) {
-
-            if (map.contains(pi.portName())) {
-                progress.setValue(i++);
-                delete irt;
-                continue;
-            }
-
             auto tc = new ThermCtrl(irt, pi.serialNumber(), this);
-
             connect(tc, &ThermCtrl::updateTabText, this, &MainWindow::updateTabText);
             connect(tc, &ThermCtrl::updateIcon, this, &MainWindow::setIcon);
-            connect(tc, &ThermCtrl::showMessage, ui->statusbar, &QStatusBar::showMessage);
-            connect(tc, &ThermCtrl::showMessage, [this](const QString& text, int) {
-                ui->teLog->append(text);
-            });
+            connect(tc, &ThermCtrl::showMessage, this, &MainWindow::showMessage);
             map.emplace(pi.portName(), tc);
         }
-        if (irt)
-            delete irt;
-        progress.setValue(i++);
+        delete irt;
         QApplication::processEvents();
     }
 
@@ -108,6 +98,11 @@ void MainWindow::updateTabText(const QString& text) {
 void MainWindow::setIcon(bool runing) {
     auto tw = ui->tabWidget;
     tw->setTabIcon(tw->indexOf(qobject_cast<QWidget*>(sender())), runing ? QIcon(QString::fromUtf8(":/res/media-playback-start.svg")) : QIcon {});
+}
+
+void MainWindow::showMessage(const QString& text, int timeout) {
+    ui->statusbar->showMessage(text, timeout);
+    ui->teLog->append(text);
 }
 
 void MainWindow::showEvent(QShowEvent* event) {

@@ -26,7 +26,7 @@ PointModel::~PointModel() {
 void PointModel::setCount(size_t newCount) {
     static QMutex m;
     QMutexLocker lok(&m);
-    if (data_.size() == newCount) {
+    if (count_ == newCount) {
         return;
     } else if (count_ < newCount) {
         beginInsertRows({}, count_, newCount - 1);
@@ -34,7 +34,7 @@ void PointModel::setCount(size_t newCount) {
         if (data_.size() < newCount)
             data_.resize(newCount);
         endInsertRows();
-    } else if (data_.size() > newCount) {
+    } else if (count_ > newCount) {
         beginRemoveRows({}, newCount, count_ - 1);
         count_ = newCount;
         endRemoveRows();

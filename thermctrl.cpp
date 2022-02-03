@@ -238,6 +238,7 @@ void ThermCtrl::on_pbSave_clicked() {
 void ThermCtrl::on_pbLoad_clicked() {
     pointModel->load(QFileDialog::getOpenFileName(this, "Загрузить точки", pointModel->name(), "JSON (*.json)"));
     updateGrBxName();
+    ui->sbxPoints->setValue(pointModel->count());
 }
 
 void ThermCtrl::on_pbRename_clicked() {

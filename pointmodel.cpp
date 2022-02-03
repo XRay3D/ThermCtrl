@@ -6,35 +6,44 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMessageBox>
 #include <QMutex>
 #include <QMutexLocker>
 #include <algorithm>
 
+static int id = qRegisterMetaType<QVector<int>>("QVector<int>");
+
 PointModel::PointModel(QObject* parent)
     : QAbstractTableModel(parent)
-    , data_ { {} } {
+    , data_ { {} }
+    , count_ { data_.size() } {
 }
 
 PointModel::~PointModel() {
     save(name_);
 }
 
-void PointModel::setCount(size_t count) {
+void PointModel::setCount(size_t newCount) {
     static QMutex m;
     QMutexLocker lok(&m);
-    if (data_.size() == count) {
+    if (data_.size() == newCount) {
         return;
-    } else if (count_ < count) {
-        beginInsertRows({}, count_, count - 1);
-        count_ = count;
-        if (data_.size() < count)
-            data_.resize(count);
+    } else if (count_ < newCount) {
+        beginInsertRows({}, count_, newCount - 1);
+        count_ = newCount;
+        if (data_.size() < newCount)
+            data_.resize(newCount);
         endInsertRows();
-    } else if (data_.size() > count) {
-        beginRemoveRows({}, count, count_ - 1);
-        count_ = count;
+    } else if (data_.size() > newCount) {
+        beginRemoveRows({}, newCount, count_ - 1);
+        count_ = newCount;
         endRemoveRows();
     }
+}
+
+void PointModel::setCurrent(int newCurrent) {
+    current_ = newCurrent;
+    emit dataChanged(index(current_, Point::Temp), index(current_, Point::Temp), { Qt::BackgroundColorRole });
 }
 
 int PointModel::rowCount(const QModelIndex&) const { return count_; }
@@ -47,7 +56,7 @@ QVariant PointModel::data(const QModelIndex& index, int role) const {
         case Point::Temp:
             return data_[index.row()].temp;
         case Point::Time:
-            return data_[index.row()].time.toString("hч. mmм.");
+            return data_[index.row()].time.toString("hч. mmмин.");
         }
     } else if (role == Qt::TextAlignmentRole) {
         return Qt::AlignCenter;
@@ -95,17 +104,22 @@ QVariant PointModel::headerData(int section, Qt::Orientation orientation, int ro
 }
 
 Qt::ItemFlags PointModel::flags(const QModelIndex&) const {
-    return Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    return (editable_ ? Qt::ItemIsEditable : Qt::NoItemFlags) | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
 void PointModel::save(const QString& name) {
+    if (name.endsWith("термокамеры.json")) {
+        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "", "Невозможно перезаписать файл!");
+        return;
+    }
+
     if (!name.endsWith(".json"))
         return;
     name_ = name;
     QFile file(name_);
     if (file.open(QFile::WriteOnly)) {
         QJsonArray array;
-        for (int i {}; i < data_.size(); ++i) {
+        for (int i {}; i < count_; ++i) {
             QJsonObject obj;
             obj["temp"] = data_[i].temp;
             obj["time"] = data_[i].time.toString("hh:mm");
@@ -122,18 +136,22 @@ void PointModel::load(const QString& name) {
         return;
     if (name_ != name)
         save(name_);
-    name_ = name;
-    QFile file(name_);
+    QFile file(name);
     if (file.open(QFile::ReadOnly)) {
-        auto document { QJsonDocument ::fromJson(file.readAll()) };
-        auto array { document.array() };
-        data_.resize(array.size());
-        for (int i {}; i < data_.size(); ++i) {
-            auto obj { array[i].toObject() };
-            data_[i].temp = obj["temp"].toDouble();
-            data_[i].time = QTime::fromString(obj["time"].toString(), "hh:mm");
+        auto document { QJsonDocument::fromJson(file.readAll()) };
+        if (document.isArray()) {
+            name_ = name;
+            auto array { document.array() };
+            data_.resize(array.size());
+            for (int i {}; i < data_.size(); ++i) {
+                auto obj { array[i].toObject() };
+                data_[i].temp = obj["temp"].toDouble();
+                data_[i].time = QTime::fromString(obj["time"].toString(), "hh:mm");
+            }
+            setCount(data_.size());
+        } else {
+            QMessageBox::warning(qobject_cast<QWidget*>(parent()), "", "Некорректный файл!");
         }
-        setCount(data_.size());
     } else {
         qWarning() << file.errorString();
     }

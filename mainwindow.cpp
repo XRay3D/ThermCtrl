@@ -12,7 +12,10 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui { new Ui::MainWindow } {
     ui->setupUi(this);
-    teLog = ui->teLog;
+
+    connect(this, &MainWindow::log, ui->teLog, &QTextEdit::append, Qt::QueuedConnection);
+    connect(this, &MainWindow::logColor, ui->teLog, &QTextEdit::setTextColor, Qt::QueuedConnection);
+
     ui->statusbar->setFont(font());
 
     auto toolBar = addToolBar("Поиск");
@@ -25,7 +28,6 @@ MainWindow::MainWindow(QWidget* parent)
     restoreState(settings.value("State").toByteArray());
     ui->splitter->restoreState(settings.value("splitter").toByteArray());
     settings.endGroup();
-    QTimer::singleShot(100, this, &MainWindow::searchForThermalChambers);
 }
 
 MainWindow::~MainWindow() {
@@ -51,32 +53,41 @@ void MainWindow::searchForThermalChambers() {
     progress.setWindowModality(Qt::WindowModal);
     progress.show();
     Irt5502* irt {};
+
     for (int i {}; auto& pi : availablePorts) {
         Elemer::Timer t("availablePorts");
         qDebug() << "vendorIdentifier" << pi.vendorIdentifier();
+        qDebug() << "portName" << pi.portName();
+        qDebug() << "serialNumber" << pi.serialNumber();
 
-        if (pi.vendorIdentifier() != 1027) {
+        if (0&&pi.vendorIdentifier() != 1027) {
             progress.setValue(i++);
             continue;
         }
 
         if (progress.wasCanceled())
             break;
-        if (!irt)
-            irt = new Irt5502;
+        irt = new Irt5502;
         if (irt->ping(pi.portName(), 19200, 1)) {
 
             if (map.contains(pi.portName())) {
                 progress.setValue(i++);
+                delete irt;
                 continue;
             }
-            auto tc = new ThermCtrl(irt, this);
+
+            auto tc = new ThermCtrl(irt, pi.serialNumber(), this);
+
+            connect(tc, &ThermCtrl::updateTabText, this, &MainWindow::updateTabText);
+            connect(tc, &ThermCtrl::updateIcon, this, &MainWindow::setIcon);
             connect(tc, &ThermCtrl::showMessage, ui->statusbar, &QStatusBar::showMessage);
             connect(tc, &ThermCtrl::showMessage, [this](const QString& text, int) {
                 ui->teLog->append(text);
             });
             map.emplace(pi.portName(), tc);
         }
+        if (irt)
+            delete irt;
         progress.setValue(i++);
         QApplication::processEvents();
     }
@@ -85,8 +96,23 @@ void MainWindow::searchForThermalChambers() {
 
     ui->tabWidget->clear();
 
-    for (auto& [portName, thermCtrl] : map) {
-        Elemer::Timer t("for");
-        ui->tabWidget->addTab(thermCtrl, portName);
-    }
+    for (auto& [portName, thermCtrl] : map)
+        ui->tabWidget->addTab(thermCtrl, thermCtrl->name().size() ? thermCtrl->name() : portName);
+}
+
+void MainWindow::updateTabText(const QString& text) {
+    auto tw = ui->tabWidget;
+    tw->setTabText(tw->indexOf(qobject_cast<QWidget*>(sender())), text);
+}
+
+void MainWindow::setIcon(bool runing) {
+    auto tw = ui->tabWidget;
+    tw->setTabIcon(tw->indexOf(qobject_cast<QWidget*>(sender())), runing ? QIcon(QString::fromUtf8(":/res/media-playback-start.svg")) : QIcon {});
+}
+
+void MainWindow::showEvent(QShowEvent* event) {
+    if (showEventSkip)
+        return;
+    showEventSkip = true;
+    QTimer::singleShot(200, this, &MainWindow::searchForThermalChambers);
 }

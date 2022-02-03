@@ -28,15 +28,26 @@ Irt5502::Irt5502(QObject* parent)
     : Elemer::Device(parent) {
 }
 
-bool Irt5502::setSetPoint(float val) {
+bool Irt5502::setTargetTemperature(float val) {
     QMutexLocker locker(&mutex_);
+#ifdef EL_EMU
+    targetTemperature = val;
+    return true;
+#endif
     Policy(this);
     bool success = isConnected() && writeHex<ParamCmd::Write>(Write, Par::SetPoint, Semicolon {}, val) == 0;
     return success;
 }
 
-bool Irt5502::getMasuredValue(float* val) {
+bool Irt5502::getMasuredTemperature(float* val) {
     QMutexLocker locker(&mutex_);
+#ifdef EL_EMU
+    tmpTemperature = tmpTemperature * .9 + targetTemperature * .1;
+    if (val)
+        *val = tmpTemperature;
+    emit measuredValue(tmpTemperature);
+    return true;
+#endif
     Policy(this);
     AllData all;
     bool success = isConnected() && writeHex<ParamCmd::Read>(Read, Par::All) == 0 && readHex(all);
@@ -50,6 +61,9 @@ bool Irt5502::getMasuredValue(float* val) {
 
 bool Irt5502::setEnable(bool run) {
     QMutexLocker locker(&mutex_);
+#ifdef EL_EMU
+    return true;
+#endif
     Policy(this);
     bool success = isConnected() && writeHex<ParamCmd::Write>(Write, Par::Enable, Semicolon {}, run) == 0;
     return success;

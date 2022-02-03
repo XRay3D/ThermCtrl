@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QJsonObject>
 #include <QMainWindow>
 #include <QTextEdit>
 #include <QThread>
@@ -16,12 +17,22 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
-    static inline QTextEdit* teLog{};
+
+signals:
+    void log(const QString&);
+    void logColor(const QColor&);
 
 private:
     Ui::MainWindow* ui;
 
     void searchForThermalChambers();
+    void updateTabText(const QString& name);
+    void setIcon(bool runing);
 
     std::map<QString, ThermCtrl*> map;
+    bool showEventSkip{};
+
+    // QWidget interface
+protected:
+    void showEvent(QShowEvent *event) override;
 };

@@ -7,8 +7,12 @@
 
 class Automatic;
 class PointModel;
+
+class CustomPlot;
+
+class QSplitter;
 namespace Ui {
-    class ThermCtrl;
+class ThermCtrl;
 }
 
 class ThermCtrl : public QWidget {
@@ -21,6 +25,13 @@ public:
     const QString& name() const;
     void setName(const QString& newName);
 
+    void rename();
+
+    void savePoints();
+    void loadPoints();
+    bool isRunning() const;
+    QSplitter* splitter() const;
+
 private:
     Ui::ThermCtrl* ui;
 
@@ -30,7 +41,7 @@ private:
     QThread irtThread;
     QString name_;
     QString const serialNumber;
-    QTimer timer;
+    CustomPlot* customPlot;
 
     int current {};
 
@@ -39,9 +50,9 @@ private:
 
     void updateTableViewPointsHeight();
     void finished();
-    void checkConnection();
-    void timeout();
+    bool checkConnection();
     void updateGrBxName();
+    void loadPoints(const QString& name);
 
 signals:
     void getValue(float* = {});
@@ -53,12 +64,8 @@ private slots:
     void on_pbAutoStartStop_clicked(bool checked = false);
     void on_pbManReadTemp_clicked();
 
-    void on_pbSave_clicked();
-    void on_pbLoad_clicked();
-    void on_pbRename_clicked();
-
-    void on_pbManStop_clicked();
     void on_pbManStart_clicked();
+    void on_pbManStop_clicked();
 
 protected:
     // QWidget interface

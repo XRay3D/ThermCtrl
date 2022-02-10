@@ -40,7 +40,7 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext& context, const QS
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
-    QApplication::setOrganizationName("XrSoft");
+    QApplication::setOrganizationName("Elemer");
     QApplication::setApplicationName("ThermCtrl");
 
     QSettings::setDefaultFormat(QSettings::IniFormat);
@@ -62,6 +62,10 @@ int main(int argc, char* argv[]) {
     //            app.installTranslator(&translator);
     //        }
     //    }
+
+    QTranslator translator;
+    translator.load("translations/qt_ru.qm");
+    app.installTranslator(&translator);
 
     MainWindow w;
     w.show();

@@ -56,4 +56,5 @@ private:
     size_t count_ {};
     int current_ {};
     bool editable_ { true };
+    bool isEdited{};
 };

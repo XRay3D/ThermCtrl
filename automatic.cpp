@@ -12,9 +12,9 @@ Automatic::Automatic(Irt5502* irt, PointModel* pointModel, QObject* parent)
 
 Automatic::~Automatic() { }
 
-const auto ncm = QString("Нет связи с термокамкрой!");
 
 void Automatic::run() {
+    static const auto ncm = QString("Нет связи с термокамкрой!");
 
     struct Enable {
         Irt5502& irt;
@@ -36,6 +36,7 @@ void Automatic::run() {
         allTime = allTime.addMSecs(point.time.msecsSinceStartOfDay());
 
     float val {};
+
     auto wait = [this, &val](int msec) -> bool {
         if (irt->getMasuredTemperature(&val)) {
             do {
@@ -64,19 +65,27 @@ void Automatic::run() {
 
             const auto dateTimeDelay = QDateTime::currentDateTime();
             do {
+#ifdef EL_EMU
+                if (!wait(20))
+#else
                 if (!wait(2000))
+#endif
                     return;
-                updateTabText(QString("T%3=%1ºC, ожидание %2ºC").arg(val, 0, 'f', 1).arg(point.temp).arg(current));
-                auto secs = dateTimeDelay.secsTo(QDateTime::currentDateTime());
-                if (secs > 5 * 60 && abs(val - val2) < 2) { //5 min delay
-                    message = "Термокамера не набирает температуру!";
-                    return;
-                }
+                emit updateTabText(QString("T%3=%1ºC, ожидание %2ºC").arg(val, 0, 'f', 1).arg(point.temp).arg(current));
+                // auto secs = dateTimeDelay.secsTo(QDateTime::currentDateTime());
+                // if (secs > 10 * 60 && abs(val - val2) < 2) { //5 min delay
+                // message = "Термокамера не набирает температуру!";
+                // return;
+                // }
             } while (abs(val - point.temp) > 0.2);
             allTime = allTime.addMSecs(dateTimeDelay.msecsTo(QDateTime::currentDateTime()));
         }
 
+#ifdef EL_EMU
+        const auto timeTo = QDateTime::currentDateTime().addMSecs(point.time.msecsSinceStartOfDay() / 10);
+#else
         const auto timeTo = QDateTime::currentDateTime().addMSecs(point.time.msecsSinceStartOfDay());
+#endif
         while (QDateTime::currentDateTime() < timeTo) {
             if (!wait(2000))
                 return;
@@ -85,8 +94,8 @@ void Automatic::run() {
             secs /= 60;
             auto min = secs % 60;
             secs /= 60;
-            updateTabText(QString("T%5=%1ºC, осталось %2:%3:%4").arg(val, 0, 'f', 1).arg(secs).arg(min, 2, 10, QChar { '0' }).arg(sec, 2, 10, QChar { '0' }).arg(current));
+            emit updateTabText(QString("T%5=%1ºC, осталось %2:%3:%4").arg(val, 0, 'f', 1).arg(secs).arg(min, 2, 10, QChar { '0' }).arg(sec, 2, 10, QChar { '0' }).arg(current));
         }
     }
-    message = "Термокамера звершила термопрогон.";
+    message = "Термопрогон завершён.";
 }

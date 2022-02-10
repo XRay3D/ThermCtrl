@@ -3,6 +3,7 @@
 #include <QColor>
 #include <QDebug>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -39,11 +40,12 @@ void PointModel::setCount(size_t newCount) {
         count_ = newCount;
         endRemoveRows();
     }
+    isEdited = true;
 }
 
 void PointModel::setCurrent(int newCurrent) {
     current_ = newCurrent;
-    emit dataChanged(index(current_, Point::Temp), index(current_, Point::Temp), { Qt::BackgroundColorRole });
+    emit dataChanged(index(0, Point::Temp), index(count_ - 1, Point::Time), { Qt::BackgroundColorRole });
 }
 
 int PointModel::rowCount(const QModelIndex&) const { return count_; }
@@ -77,10 +79,10 @@ bool PointModel::setData(const QModelIndex& index, const QVariant& value, int ro
         switch (index.column()) {
         case Point::Temp:
             data_[index.row()].temp = value.toDouble();
-            return true;
+            return isEdited = true;
         case Point::Time:
             data_[index.row()].time = value.toTime();
-            return true;
+            return isEdited = true;
         }
     }
     return {};
@@ -134,8 +136,16 @@ void PointModel::save(const QString& name) {
 void PointModel::load(const QString& name) {
     if (!name.endsWith(".json"))
         return;
-    if (name_ != name)
+    if (name_.size()
+        && (name_ != name)
+        && isEdited
+        && QMessageBox::question(
+               qobject_cast<QWidget*>(parent()),
+               "",
+               "Сохранить изменения в \"" + QFileInfo(name_).fileName() + "\"")
+            == QMessageBox::Yes) {
         save(name_);
+    }
     QFile file(name);
     if (file.open(QFile::ReadOnly)) {
         auto document { QJsonDocument::fromJson(file.readAll()) };
@@ -149,6 +159,7 @@ void PointModel::load(const QString& name) {
                 data_[i].time = QTime::fromString(obj["time"].toString(), "hh:mm");
             }
             setCount(data_.size());
+            isEdited = false;
         } else {
             QMessageBox::warning(qobject_cast<QWidget*>(parent()), "", "Некорректный файл!");
         }

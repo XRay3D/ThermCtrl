@@ -1,4 +1,4 @@
-QT       += core gui serialport charts widgets
+QT       += core gui serialport widgets printsupport
 
 DESTDIR = $$_PRO_FILE_PWD_/bin
 #CONFIG += console
@@ -25,20 +25,24 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000 \    # disables all the APIs de
 
 SOURCES += \
     automatic.cpp \
-    chartview.cpp \
+    axistag.cpp \
+    customplot.cpp \
     irt5502.cpp \
     main.cpp \
     mainwindow.cpp \
     pointmodel.cpp \
+    qcustomplot.cpp \
     thermctrl.cpp
 
 HEADERS += \
     automatic.h \
-    chartview.h \
+    axistag.h \
+    customplot.h \
     doublespinbox.h \
     irt5502.h \
     mainwindow.h \
     pointmodel.h \
+    qcustomplot.h \
     thermctrl.h \
     version.h
 

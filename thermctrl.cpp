@@ -1,5 +1,6 @@
 #include "thermctrl.h"
 #include "automatic.h"
+#include "customplot.h"
 #include "irt5502.h"
 #include "pointmodel.h"
 #include "ui_thermctrl.h"
@@ -48,6 +49,7 @@ ThermCtrl::ThermCtrl(Irt5502*& irt, const QString& serialNumber, QWidget* parent
     irt = nullptr;
     Elemer::Timer t(__FUNCTION__);
     ui->setupUi(this);
+    ui->splitter->addWidget(customPlot = new CustomPlot(this));
 
     for (auto childs { findChildren<QPushButton*>() }; auto pb : childs)
         pb->setIconSize({ 16, 16 });
@@ -58,7 +60,8 @@ ThermCtrl::ThermCtrl(Irt5502*& irt, const QString& serialNumber, QWidget* parent
 
     connect(irt_, &Irt5502::message, this, &ThermCtrl::showMessage);
     connect(irt_, &Irt5502::measuredValue, ui->dsbxReadTemp, &QDoubleSpinBox::setValue);
-    connect(irt_, &Irt5502::measuredValue, ui->chartView, &ChartView::addPoint);
+    //    connect(irt_, &Irt5502::measuredValue, ui->chartView, &ChartView::addPoint);
+    connect(irt_, &Irt5502::measuredValue, customPlot, &CustomPlot::addPoint);
     connect(this, &ThermCtrl::getValue, irt_, &Irt5502::getMasuredTemperature);
 
     // setup twPoints
@@ -68,8 +71,6 @@ ThermCtrl::ThermCtrl(Irt5502*& irt, const QString& serialNumber, QWidget* parent
     ui->twPoints->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->twPoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->twPoints->setItemDelegate(new MyItemDelegate(ui->twPoints)); // подтюнил для красоты
-
-    connect(&timer, &QTimer::timeout, this, &ThermCtrl::timeout);
 
     connect(pointModel, &PointModel::message, this, &ThermCtrl::showMessage);
 
@@ -95,13 +96,15 @@ ThermCtrl::ThermCtrl(Irt5502*& irt, const QString& serialNumber, QWidget* parent
         setObjectName(name_);
         file.close();
     }
+    if (name_.isEmpty())
+        name_ = irt_->port()->portName();
 
     loadSettings();
 }
 
 ThermCtrl::~ThermCtrl() {
-    irt_->disable();
     saveSettings();
+    irt_->disable();
     irtThread.quit();
     irtThread.wait();
     delete ui;
@@ -131,9 +134,7 @@ void ThermCtrl::loadSettings() {
     settings.endGroup();
 
     settings.beginGroup(irt_->port()->portName());
-    pointModel->load(settings.value("pointData", irt_->port()->portName() + ".json").toString());
-    ui->sbxPoints->setValue(pointModel->count());
-    updateGrBxName();
+    loadPoints(settings.value("pointData", irt_->port()->portName() + ".json").toString());
     settings.endGroup();
 }
 
@@ -151,25 +152,24 @@ void ThermCtrl::updateTableViewPointsHeight() {
 void ThermCtrl::finished() {
     on_pbAutoStartStop_clicked();
     if (automatic->message.size()) {
-        QMessageBox::information(this, "", automatic->message);
+        QMessageBox::information(this, name_, automatic->message);
         qCritical() << name_ << automatic->message;
     }
 }
 
-void ThermCtrl::checkConnection() {
+bool ThermCtrl::checkConnection() {
+    const QString err { "Нет связи с термокамкрой " + name_ + "!" };
     while (!irt_->isConnected()
         && QMessageBox::warning(this,
                name_,
-               "Нет связи с термокамкрой!",
+               err,
                QMessageBox::Retry,
                QMessageBox::Cancel)
             == QMessageBox::Retry) {
-        qWarning() << name_<< "Нет связи с термокамкрой!";
+        qWarning() << err;
         irt_->ping({}, {}, 1);
     }
-}
-
-void ThermCtrl::timeout() {
+    return {};
 }
 
 void ThermCtrl::updateGrBxName() {
@@ -182,7 +182,6 @@ void ThermCtrl::showEvent(QShowEvent* event) {
 }
 
 void ThermCtrl::on_pbAutoStartStop_clicked(bool checked) {
-    checkConnection();
     if (irt_->isConnected()) {
         if (checked) {
             int time {};
@@ -195,8 +194,9 @@ void ThermCtrl::on_pbAutoStartStop_clicked(bool checked) {
                 return;
             }
             // connect pAutomatic
-            ui->chartView->reset(); // чистка графика
-            automatic->start();     // запуск потока
+            //            ui->chartView->reset(); // чистка графика
+            customPlot->reset(); // чистка графика
+            automatic->start();  // запуск потока
             ui->pbAutoStartStop->setText("Стоп");
             emit updateIcon(true);
         } else {
@@ -212,11 +212,10 @@ void ThermCtrl::on_pbAutoStartStop_clicked(bool checked) {
         //        ui->grbxConnection->setEnabled(!checked);
         pointModel->setEditable(!checked);
         ui->grbxMan->setEnabled(!checked);
-        ui->pbLoad->setEnabled(!checked);
-        ui->pbSave->setEnabled(!checked);
         ui->sbxPoints->setEnabled(!checked);
     } else {
         checked = false;
+        checkConnection();
     }
     QIcon icon1(QString::fromUtf8(checked ? ":/res/media-playback-stop.svg"
                                           : ":/res/media-playback-start.svg"));
@@ -225,23 +224,35 @@ void ThermCtrl::on_pbAutoStartStop_clicked(bool checked) {
 }
 
 void ThermCtrl::on_pbManReadTemp_clicked() {
-    checkConnection();
     if (irt_->getMasuredTemperature())
-        emit showMessage("Чтение температуры");
+        emit showMessage("Чтение температуры из " + name_);
+    else
+        checkConnection();
 }
 
-void ThermCtrl::on_pbSave_clicked() {
+void ThermCtrl::savePoints() {
     pointModel->save(QFileDialog::getSaveFileName(this, "Сохранить точки", pointModel->name(), "JSON (*.json)"));
     updateGrBxName();
 }
 
-void ThermCtrl::on_pbLoad_clicked() {
+void ThermCtrl::loadPoints() {
     pointModel->load(QFileDialog::getOpenFileName(this, "Загрузить точки", pointModel->name(), "JSON (*.json)"));
-    updateGrBxName();
     ui->sbxPoints->setValue(pointModel->count());
+    updateGrBxName();
 }
 
-void ThermCtrl::on_pbRename_clicked() {
+void ThermCtrl::loadPoints(const QString& name) {
+    qDebug() << __FUNCTION__ << name;
+    pointModel->load(name);
+    ui->sbxPoints->setValue(pointModel->count());
+    updateGrBxName();
+}
+
+bool ThermCtrl::isRunning() const { return automatic->isRunning(); }
+
+QSplitter* ThermCtrl::splitter() const { return ui->splitter; }
+
+void ThermCtrl::rename() {
     QString newName = QInputDialog::getText(this, irt_->port()->portName(), "Ведите название термокамеры", QLineEdit::Normal, name_);
     if (newName.size() && newName != name_) {
         name_ = newName;
@@ -275,20 +286,22 @@ void ThermCtrl::setName(const QString& newName) {
     emit updateTabText(name_);
 }
 
-void ThermCtrl::on_pbManStop_clicked() {
-    checkConnection();
-    if (irt_->setTargetTemperature(ui->dsbxSetPoint->value()) && irt_->enable()) {
-        emit showMessage("Камера выключена");
-        emit updateIcon(false);
-    }
-    emit updateTabText(name_);
-}
-
 void ThermCtrl::on_pbManStart_clicked() {
-    checkConnection();
-    if (irt_->disable()) {
-        emit showMessage("Камера включена");
+    if (irt_->setTargetTemperature(ui->dsbxSetPoint->value()) && irt_->enable()) {
+        emit showMessage("Камера " + name_ + " включена");
         emit updateIcon(true);
         emit updateTabText(QString("%1: T=%2").arg(name_).arg(ui->dsbxSetPoint->text()));
+    } else {
+        checkConnection();
+        emit updateTabText(name_);
     }
+}
+
+void ThermCtrl::on_pbManStop_clicked() {
+    if (irt_->disable()) {
+        emit showMessage("Камера " + name_ + " выключена");
+        emit updateIcon(false);
+    } else
+        checkConnection();
+    emit updateTabText(name_);
 }

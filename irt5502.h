@@ -71,36 +71,21 @@ public:
 
     Elemer::DeviceType type() const override { return Elemer::IRT_5502; };
 
-    bool setSetPoint(float val);
-    bool getMasuredValue(float* val = {});
+    bool setTargetTemperature(float val);
+    bool getMasuredTemperature(float* val = {});
     bool setEnable(bool run);
+
+    bool enable() { return setEnable(true); }
+    bool disable() { return setEnable(false); }
 
 signals:
     void measuredValue(double);
 
 private:
-    //    enum class Cmd : uint8_t {
-    //        GetType = 0,
-    //        GetData = 1,
-
-    //        GetProtocolType = 32,
-    //        SetDevAddress = 33,
-    //        SetDevSpeed = 34,
-
-    //        ReadPar = 37,
-    //        WritePar = 38,
-    //        ModifPar = 39,
-
-    //        FOpen = 40,
-    //        FSeek = 41,
-    //        FRead = 42,
-    //        FWrite = 43,
-    //        FClose = 44,
-
-    //        GetVer = 0XFE,
-
-    //        ResetCpu = 0XFF
-    //    };
+#ifdef EL_EMU
+    float targetTemperature {};
+    float tmpTemperature {};
+#endif
 
     enum class Par : uint16_t {
         SetPoint = 0x66DA,

@@ -12,12 +12,13 @@ class Automatic final : public QThread {
     Irt5502* irt;
     PointModel* pointModel;
 
-    QDateTime timeTo;
-
 public:
     explicit Automatic(Irt5502* irt, PointModel* pointModel, QObject* parent = nullptr);
     ~Automatic();
+    QString message;
+
 signals:
+    void updateTabText(const QString& name);
 
 protected:
     // QThread interface

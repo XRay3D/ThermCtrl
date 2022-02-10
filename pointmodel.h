@@ -3,6 +3,7 @@
 #include <QAbstractTableModel>
 #include <QTime>
 #include <ranges>
+#include <span>
 
 struct Point {
     double temp { 25.0 };
@@ -14,22 +15,6 @@ struct Point {
     };
 };
 
-template <class T, class A>
-class VectorView : public std::ranges::view_interface<VectorView<T, A>> {
-public:
-    // We need to define a default constructor to satisfy the view concept.
-    VectorView() = default;
-    VectorView(const std::vector<T, A>& vec, size_t count)
-        : m_begin(vec.cbegin())
-        , m_end(vec.cbegin() + count) {
-    }
-    auto begin() const { return m_begin; }
-    auto end() const { return m_end; }
-
-private:
-    typename std::vector<T, A>::const_iterator m_begin, m_end;
-};
-
 class PointModel final : public QAbstractTableModel {
     Q_OBJECT
 
@@ -37,18 +22,20 @@ public:
     explicit PointModel(QObject* parent = nullptr);
     ~PointModel() override;
 
-    void setCount(size_t count);
+    void setCount(size_t newCount);
     int count() const { return count_; }
 
-    void setCurrent(int newCurrent) { current_ = newCurrent; }
+    void setCurrent(int newCurrent);
     int current() const { return current_; }
 
     void save(const QString& name);
     void load(const QString& name);
     QString name() const { return name_; }
 
+    void setEditable(bool editable) { editable_ = editable; }
+
     Point point(size_t idx) const;
-    auto data() { return VectorView(data_, count_); }
+    auto data() { return std::span(data_.data(), count_); }
 
     // QAbstractItemModel interface
     int rowCount(const QModelIndex& = {}) const override;
@@ -66,6 +53,8 @@ signals:
 private:
     QString name_;
     std::vector<Point> data_;
-    size_t count_ { 1 };
+    size_t count_ {};
     int current_ {};
+    bool editable_ { true };
+    bool isEdited{};
 };

@@ -60,9 +60,9 @@ MainWindow::~MainWindow() {
 void MainWindow::searchForThermalChambers() {
     Elemer::Timer t(__FUNCTION__);
     auto availablePorts { QSerialPortInfo::availablePorts().toVector() };
-    std::ranges::sort(availablePorts, {}, [](const QSerialPortInfo& pi) {
-        return pi.portName().midRef(3).toInt();
-    });
+//    std::ranges::sort(availablePorts, {}, [](const QSerialPortInfo& pi) {
+//        return pi.portName().midRef(3).toInt();
+//    });
 
     QProgressDialog progress("Поиск термокамер", "Остановить", 0, availablePorts.size(), this);
     progress.setWindowModality(Qt::WindowModal);

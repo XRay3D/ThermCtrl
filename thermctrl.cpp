@@ -50,8 +50,9 @@ ThermCtrl::ThermCtrl(Irt5502*& irt, const QString& serialNumber, QWidget* parent
     Elemer::Timer t(__FUNCTION__);
     ui->setupUi(this);
     ui->splitter->addWidget(customPlot = new CustomPlot(this));
+    ui->splitter->setStretchFactor(1, 1);
 
-    for (auto childs { findChildren<QPushButton*>() }; auto pb : childs)
+    for (auto pb : findChildren<QPushButton*>())
         pb->setIconSize({ 16, 16 });
 
     irt_->moveToThread(&irtThread);

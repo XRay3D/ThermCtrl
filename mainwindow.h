@@ -7,7 +7,7 @@
 #include <set>
 
 namespace Ui {
-    class MainWindow;
+class MainWindow;
 }
 class ThermCtrl;
 class Irt5502;
@@ -32,13 +32,19 @@ private:
     void setIcon(bool runing);
     void showMessage(const QString& text, int timeout = 0);
     void enablePointActions(bool enable);
+
     struct TC {
         ThermCtrl* tc {};
         Irt5502* irt;
         QString sn;
+        struct CMP {
+            bool operator()(const QString& pl, const QString& pr) const noexcept {
+                return pl.midRef(3).toUInt() < pr.midRef(3).toUInt();
+            }
+        };
     };
 
-    std::map<QString, TC> map;
+    std::map<QString, TC, TC::CMP> map;
     bool showEventSkip {};
     QToolBar* toolBar;
     ThermCtrl* currentTc() const;

@@ -23,4 +23,8 @@ signals:
 protected:
     // QThread interface
     void run() override;
+
+private:
+    bool wait( int msec);
+    float val {};
 };

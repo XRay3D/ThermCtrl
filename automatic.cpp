@@ -3,6 +3,7 @@
 #include "pointmodel.h"
 
 #include <QDebug>
+static const auto ncm = QString("Нет связи с термокамкрой!");
 
 Automatic::Automatic(Irt5502* irt, PointModel* pointModel, QObject* parent)
     : QThread(parent)
@@ -12,9 +13,7 @@ Automatic::Automatic(Irt5502* irt, PointModel* pointModel, QObject* parent)
 
 Automatic::~Automatic() { }
 
-
 void Automatic::run() {
-    static const auto ncm = QString("Нет связи с термокамкрой!");
 
     struct Enable {
         Irt5502& irt;
@@ -35,20 +34,18 @@ void Automatic::run() {
     for (auto& point : pointModel->data())
         allTime = allTime.addMSecs(point.time.msecsSinceStartOfDay());
 
-    float val {};
-
-    auto wait = [this, &val](int msec) -> bool {
-        if (irt->getMasuredTemperature(&val)) {
-            do {
-                if (isInterruptionRequested())
-                    return false;
-                msleep(100);
-            } while ((msec -= 100) > 0);
-            return true;
-        }
-        message = ncm;
-        return false;
-    };
+    //    auto wait = [this, &val](int msec) -> bool {
+    //        if (irt->getMasuredTemperature(&val)) {
+    //            do {
+    //                if (isInterruptionRequested())
+    //                    return false;
+    //                msleep(100);
+    //            } while ((msec -= 100) > 0);
+    //            return true;
+    //        }
+    //        message = ncm;
+    //        return false;
+    //    };
 
     message.clear();
 
@@ -98,4 +95,17 @@ void Automatic::run() {
         }
     }
     message = "Термопрогон завершён.";
+}
+
+bool Automatic::wait(int msec) {
+    if (irt->getMasuredTemperature()) {
+        do {
+            if (isInterruptionRequested())
+                return false;
+            msleep(100);
+        } while ((msec -= 100) > 0);
+        return true;
+    }
+    message = ncm;
+    return false;
 }
